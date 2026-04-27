@@ -1,3 +1,5 @@
+import buttons
+
 start_message = """Бот создан для автоматического трекинга работ по оклейке/ремонту/демонтажу автотранспорта.
 Следуйте инструкциям ниже, чтобы отметить свою работу.
 
@@ -34,21 +36,21 @@ result_saved = """Результат сохранен
 def generate_report(data):
 
     result = f"""Исполнитель: <b>{data.get('worker')}</b>
-Город: <b>{data.get('')}</b>
-Вид работ: <b>{data.get('')}</b>
-Сюжет: <b>{data.get('')}</b>
-Вид транспорта: <b>{data.get('')}</b>
-Номер машины: <b>{data.get('')}</b>
-Номер маршрута: <b>{data.get('')}</b>
-Выполнено: <b>{data.get('')}</b>
-Фотографий до: <b>{data.get('')}</b>
-Фотографий после: <b>{data.get('')}</b>
-Комментарий: <b>{data.get('')}</b>
+Город: <b>{data.get('city')}</b>
+Вид работ: <b>{data.get('type_work')}</b>
+Сюжет: <b>{data.get('narrative')}</b>
+Вид транспорта: <b>{data.get('type_transport')}</b>
+Номер машины: <b>{data.get('transport_number')}</b>
+Номер маршрута: <b>{data.get('route_number')}</b>
+Выполнено: <b>{data.get('is_completed')}</b>
+Фотографий до: <b>{len(data.get('photos_before'))}</b>
+Фотографий после: <b>{len(data.get('photos_after'))}</b>
+Комментарий: <b>{data.get('comment')}</b>
 """
-    if data.get('working_in_team'):
-        result += f"""Сделал сам <b>{data.get('solo_percent')}</b> процентов"""
+    if data.get('working_solo') == buttons.no:
+        result += f"""\nСделал сам <b>{data.get('solo_percent')}</b> процентов\n"""
         for i in range(len(data.get('teammates'))):
             result += f"""Помощник <b>{data.get('teammates')[i]}</b>
-Выполнил <b>{data.get('teammates_percent')[i]}</b> процентов"""
+Выполнил <b>{data.get('teammates_percent')[i]}</b> процентов\n"""
             
     return result
