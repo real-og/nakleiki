@@ -48,7 +48,23 @@ def get_type_transport_recommendation_kb(type_transport_variants):
     return kb
 
 
-completed_work_kb = ReplyKeyboardMarkup([['Выполнено', 'Не выполнено']],
+completed_work_kb = ReplyKeyboardMarkup([[buttons.completed, buttons.uncompleted]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
+
+skip_comment_kb = ReplyKeyboardMarkup([[buttons.skip_comment]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
+
+yes_no_kb = ReplyKeyboardMarkup([[buttons.yes, buttons.no]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
+
+finish_kb = ReplyKeyboardMarkup([[buttons.finish]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
+
+send_kb = ReplyKeyboardMarkup([[buttons.send]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 

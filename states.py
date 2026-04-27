@@ -11,10 +11,12 @@ class State(StatesGroup):
     entering_route_number = State()
     entering_photos_before = State()
     working_on = State()
+
     entering_photos_after = State()
     entering_comment = State()
     entering_was_working_solo = State()
     entering_my_percent = State()
-    adding_guy = State()
-    entering_percent_guy = State()
-    
+    adding_coworker = State()
+    entering_percent_coworker = State()
+    last_check = State()
+
