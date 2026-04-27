@@ -24,6 +24,15 @@ async def send_welcome(message: types.Message, state: FSMContext):
     await State.entering_your_city.set()
     await state.update_data(worker=phone_number)
 
+    row_to_add = [message.from_user.id]
+    if message.from_user.username:
+        row_to_add.append(message.from_user.username)
+    row_to_add.append(message.text)
+    if message.from_user.full_name:
+        row_to_add.append(message.from_user.full_name)
+
+    await sheets.append_row_to_buffer(row_to_add)
+
 
 @dp.message_handler(state=State.entering_your_city)
 async def send_welcome(message: types.Message, state: FSMContext):

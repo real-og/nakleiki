@@ -10,9 +10,10 @@ import sheets
 import texts
 import buttons
 import side_logic
+import config_io
 import keyboards as kb
 from states import State
-from loader import dp
+from loader import dp, bot
 
 
 @dp.message_handler(state=State.working_on)
@@ -71,8 +72,8 @@ async def send_welcome(message: types.Message, state: FSMContext):
             data = await state.get_data()
             report = texts.generate_report(data)
             await message.answer(report)
-            await side_logic.send_photos_album(message, data.get('photos_before', texts.photos_before))
-            await side_logic.send_photos_album(message, data.get('photos_after', texts.photos_after))
+            await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
+            await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
             await message.answer(texts.enter_finish, reply_markup=kb.send_kb)
             await State.last_check.set()
 
@@ -98,8 +99,8 @@ async def send_welcome(message: types.Message, state: FSMContext):
         data = await state.get_data()
         report = texts.generate_report(data)
         await message.answer(report)
-        await side_logic.send_photos_album(message, data.get('photos_before', texts.photos_before))
-        await side_logic.send_photos_album(message, data.get('photos_after', texts.photos_after))
+        await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
+        await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
         await message.answer(texts.enter_finish, reply_markup=kb.send_kb)
         await State.last_check.set()
     else:
@@ -127,6 +128,16 @@ async def send_welcome(message: types.Message, state: FSMContext):
 async def send_welcome(message: types.Message, state: FSMContext):
     if message.text == buttons.send:
         await message.answer(texts.result_saved)
+        data = await state.get_data()
+        row_data = side_logic.form_list_to_append(message.from_user.id, data)
+
+        report = texts.generate_report(data)
+        await bot.send_message(config_io.get_value('CHAT_ID'), report)
+
+        await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before, bot)
+        await side_logic.send_photos_album(message, data.get('photos_after'), texts.photos_after, bot)
+
+        await sheets.append_row_to_work_notes(row_data)
     else:
         await message.answer(texts.use_buttons, reply_markup=kb.send_kb)
 

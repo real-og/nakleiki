@@ -15,6 +15,12 @@ async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.enter_your_phone, reply_markup=kb.get_number_recommendation_kb(recommendation_number))
     await state.finish()
     await State.entering_your_number.set()
+
+
+@dp.message_handler(commands=['help'], state="*")
+async def send_welcome(message: types.Message, state: FSMContext):
+    await message.answer(texts.help_message)
+
     
 
 

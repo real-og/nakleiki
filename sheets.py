@@ -80,6 +80,14 @@ async def get_type_transport_recommendation():
     if len(result):
         return result
     return None
+
+async def append_row_to_work_notes(row_data):
+    sheet = await get_sheet(worksheet_number=WORKSHEET_WORK_NOTES)
+    await sheet.append_row(row_data)
+
+async def append_row_to_buffer(row_data):
+    sheet = await get_sheet(worksheet_number=WORKSHEET_BUFFER)
+    await sheet.append_row(row_data)
     
     
     
