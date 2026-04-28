@@ -1,3 +1,5 @@
+import re
+
 from aiogram import types
 from pathlib import Path
 import buttons
@@ -49,3 +51,14 @@ def form_list_to_append(id_tg, data):
             result.append(data.get('teammates')[i])
             result.append(data.get('teammates_percent')[i])
     return result
+
+def normalize_phone(phone: str) -> str | None:
+    if not isinstance(phone, str):
+        return None
+
+    phone = phone.strip()
+
+    if re.fullmatch(r"\+?375\d{9}", phone):
+        return phone.lstrip("+")
+
+    return None

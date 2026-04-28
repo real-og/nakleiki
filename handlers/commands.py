@@ -11,10 +11,22 @@ from loader import dp
 @dp.message_handler(commands=['start'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.start_message)
-    recommendation_number = await sheets.get_number_recommendation(message.from_user.id)
-    await message.answer(texts.enter_your_phone, reply_markup=kb.get_number_recommendation_kb(recommendation_number))
     await state.finish()
-    await State.entering_your_number.set()
+    user = await sheets.get_user(message.from_user.id)
+
+    if (user is None) or (not user[2]):
+        await message.answer(texts.reg_number)
+        await State.reg_number.set()
+        if user is None:
+            await sheets.append_row_to_buffer([message.from_user.id, message.from_user.username])
+        return
+    
+    if not user[3]:
+        await message.answer(texts.reg_name)
+        await State.reg_name.set()
+
+    await message.answer(texts.enter_begin, reply_markup=kb.begin_kb)
+    await State.entering_begin.set()
 
 
 @dp.message_handler(commands=['help'], state="*")

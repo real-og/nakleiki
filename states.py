@@ -2,7 +2,10 @@ from aiogram.dispatcher.filters.state import StatesGroup, State
 
 
 class State(StatesGroup):
-    entering_your_number = State()
+    reg_number = State()
+    reg_name = State()
+    entering_begin = State()
+
     entering_your_city = State()
     entering_type_work = State()
     entering_narrative = State()

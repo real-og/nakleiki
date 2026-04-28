@@ -33,6 +33,14 @@ async def get_all_values(worksheet_number):
     all_values = await sheet.get_all_values()
     return all_values
 
+async def get_user(id_tg):
+    result = None
+    all_ids_numbers = await get_all_values(WORKSHEET_BUFFER)
+    for row in all_ids_numbers:
+        if str(row[0]).isdecimal() and int(row[0]) == int(id_tg):
+            result = row
+    return result
+
 async def get_number_recommendation(id_tg):
     result = None
     all_ids_numbers = await get_all_values(WORKSHEET_BUFFER)
@@ -81,6 +89,7 @@ async def get_type_transport_recommendation():
         return result
     return None
 
+
 async def append_row_to_work_notes(row_data):
     sheet = await get_sheet(worksheet_number=WORKSHEET_WORK_NOTES)
     await sheet.append_row(row_data)
@@ -88,6 +97,20 @@ async def append_row_to_work_notes(row_data):
 async def append_row_to_buffer(row_data):
     sheet = await get_sheet(worksheet_number=WORKSHEET_BUFFER)
     await sheet.append_row(row_data)
+
+
+async def update_cell_buffer(id_tg, column_to_update, value):
+    """row начинается с 1, не как в массивах"""
+
+    sheet = await get_sheet(worksheet_number=WORKSHEET_BUFFER)
+    all_values = await sheet.get_all_values()
+
+    for row_index, row in enumerate(all_values, start=1):
+        if len(row) > 0 and str(row[0]).isdecimal() and int(row[0]) == int(id_tg):
+            await sheet.update_cell(row_index, column_to_update, value)
+            return True
+
+    return False
     
     
     

@@ -8,30 +8,26 @@ from aiogram.types import ReplyKeyboardRemove
 
 import sheets
 import texts
+import buttons
 import keyboards as kb
 from states import State
 from loader import dp
 
 
 
-
-@dp.message_handler(state=State.entering_your_number)
+@dp.message_handler(state=State.entering_begin)
 async def send_welcome(message: types.Message, state: FSMContext):
-    phone_number = message.text
-    await message.answer('Готово', reply_markup=ReplyKeyboardRemove())
+    user_input = message.text
+    if not(user_input == buttons.begin):
+        await message.answer(texts.use_buttons, reply_markup=kb.begin_kb)
+        return
+
     recommendation_city = await sheets.get_city_recommendation()
     await message.answer(texts.enter_your_city, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
     await State.entering_your_city.set()
-    await state.update_data(worker=phone_number)
-
-    row_to_add = [message.from_user.id]
-    if message.from_user.username:
-        row_to_add.append(message.from_user.username)
-    row_to_add.append(message.text)
-    if message.from_user.full_name:
-        row_to_add.append(message.from_user.full_name)
-
-    await sheets.append_row_to_buffer(row_to_add)
+    user = await sheets.get_user(message.from_user.id)
+    await state.update_data(worker_number=user[2])
+    await state.update_data(worker_name=user[3])
 
 
 @dp.message_handler(state=State.entering_your_city)
