@@ -128,16 +128,17 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.last_check)
 async def send_welcome(message: types.Message, state: FSMContext):
     if message.text == buttons.send:
-        await message.answer(texts.result_saved)
         data = await state.get_data()
-        row_data = side_logic.form_list_to_append(message.from_user.id, data)
+
+        await message.answer(texts.result_saved, kb.begin_kb)
+        await State.entering_begin.set()
 
         report = texts.generate_report(data)
         await bot.send_message(config_io.get_value('CHAT_ID'), report)
-
         await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before, bot)
         await side_logic.send_photos_album(message, data.get('photos_after'), texts.photos_after, bot)
 
+        row_data = side_logic.form_list_to_append(message.from_user.id, data)
         await sheets.append_row_to_work_notes(row_data)
     else:
         await message.answer(texts.use_buttons, reply_markup=kb.send_kb)
