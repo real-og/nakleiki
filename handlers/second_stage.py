@@ -123,6 +123,8 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(texts.enter_finish, reply_markup=kb.send_kb)
 
     await State.last_check.set()
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 
 @dp.message_handler(state=State.last_check)

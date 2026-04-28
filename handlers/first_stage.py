@@ -37,6 +37,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
+    
 
 @dp.callback_query_handler(state=State.entering_your_city)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
@@ -45,6 +46,8 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_type_work)
@@ -62,6 +65,8 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
     await State.entering_narrative.set()
     await state.update_data(type_work=type_work)
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_narrative)
@@ -79,6 +84,8 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
     await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_type_transport)
@@ -94,6 +101,8 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.answer(texts.enter_transport_number)
     await State.entering_transport_number.set()
     await state.update_data(type_transport=type_transport)
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_transport_number)
