@@ -4,13 +4,6 @@ from aiogram.types import ReplyKeyboardRemove, \
 import buttons
 
 
-# def get_number_recommendation_kb(phone_number):
-#     if phone_number:
-#         return ReplyKeyboardMarkup([[str(phone_number)]],
-#                                     resize_keyboard=True,
-#                                     one_time_keyboard=True)
-#     return None
-
 def get_city_recommendation_kb(cities):
     if cities is None:
         return None
@@ -32,10 +25,18 @@ def get_type_work_recommendation_kb(type_work_variants):
 def get_narrative_recommendation_kb(narrative_variants):
     if narrative_variants is None:
         return None
-    kb = InlineKeyboardMarkup()
-    for narrative in narrative_variants:
-        button = InlineKeyboardButton(text=narrative, callback_data=narrative)
-        kb.add(button)
+    if len(narrative_variants) >= 10:
+        kb = InlineKeyboardMarkup(row_width=2)
+        buttons = [
+            InlineKeyboardButton(text=narrative, callback_data=narrative)
+            for narrative in narrative_variants
+        ]
+        kb.add(*buttons)
+    else:
+        kb = InlineKeyboardMarkup()
+        for narrative in narrative_variants:
+            button = InlineKeyboardButton(text=narrative, callback_data=narrative)
+            kb.add(button)
     return kb
 
 def get_type_transport_recommendation_kb(type_transport_variants):
