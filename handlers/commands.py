@@ -24,9 +24,11 @@ async def send_welcome(message: types.Message, state: FSMContext):
     if not user[3]:
         await message.answer(texts.reg_name)
         await State.reg_name.set()
+        return
 
     await message.answer(texts.enter_begin, reply_markup=kb.begin_kb)
     await State.entering_begin.set()
+    # await State.entering_comment.set()
 
 
 @dp.message_handler(commands=['help'], state="*")

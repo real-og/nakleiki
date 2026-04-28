@@ -88,40 +88,41 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.message_handler(state=State.entering_my_percent)
 async def send_welcome(message: types.Message, state: FSMContext):
     solo_percent = message.text
-    await message.answer(texts.enter_coworker)
-    await State.adding_coworker.set()
-    await state.update_data(solo_percent=solo_percent)
-
-
-@dp.message_handler(state=State.adding_coworker)
-async def send_welcome(message: types.Message, state: FSMContext):
-    if message.text == buttons.finish:
-        data = await state.get_data()
-        report = texts.generate_report(data)
-        await message.answer(report)
-        await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
-        await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
-        await message.answer(texts.enter_finish, reply_markup=kb.send_kb)
-        await State.last_check.set()
+    if side_logic.is_int_0_100(solo_percent):
+        users = await sheets.get_users()
+        await message.answer(texts.enter_coworker, reply_markup=kb.get_users_to_select(users))
+        await State.adding_coworker.set()
+        await state.update_data(solo_percent=solo_percent)
     else:
-        data = await state.get_data()
-        teammates = data.get('teammates', [])
-        coworker = message.text
-        await message.answer(texts.enter_coworker_percent)
-        await State.entering_percent_coworker.set()
-        teammates.append(coworker)
-        await state.update_data(teammates=teammates)
+        await message.answer(texts.bad_percent)
 
 
-@dp.message_handler(state=State.entering_percent_coworker)
-async def send_welcome(message: types.Message, state: FSMContext):
+
+@dp.callback_query_handler(state=State.adding_coworker)
+async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+    coworker = callback.data
     data = await state.get_data()
+
+    solo_percent = int(data.get('solo_percent', 0))
+    teammate_percent = 100 - int(solo_percent)
+    await callback.message.answer(texts.coworker_percent + f'<b>{teammate_percent}</b>')
+
+    teammates = data.get('teammates', [])
     teammates_percent = data.get('teammates_percent', [])
-    coworker_percent = message.text
-    await message.answer(texts.enter_coworker_or_exit, reply_markup=kb.finish_kb)
-    await State.adding_coworker.set()
-    teammates_percent.append(coworker_percent)
+    teammates.append(coworker)
+    teammates_percent.append(teammate_percent)
     await state.update_data(teammates_percent=teammates_percent)
+    await state.update_data(teammates=teammates)
+
+    data = await state.get_data()
+
+    report = texts.generate_report(data)
+    await callback.message.answer(report)
+    await side_logic.send_photos_album(callback.message, data.get('photos_before'),texts.photos_before)
+    await side_logic.send_photos_album(callback.message, data.get('photos_after'),texts.photos_after)
+    await callback.message.answer(texts.enter_finish, reply_markup=kb.send_kb)
+
+    await State.last_check.set()
 
 
 @dp.message_handler(state=State.last_check)

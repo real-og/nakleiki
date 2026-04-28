@@ -33,7 +33,8 @@ async def send_photos_album(
 
 def form_list_to_append(id_tg, data):
     result = [id_tg]
-    result.append(data.get('worker'))
+    result.append(data.get('worker_number'))
+    result.append(data.get('worker_name'))
     result.append(data.get('city'))
     result.append(data.get('type_work'))
     result.append(data.get('narrative'))
@@ -52,13 +53,21 @@ def form_list_to_append(id_tg, data):
             result.append(data.get('teammates_percent')[i])
     return result
 
+
 def normalize_phone(phone: str) -> str | None:
     if not isinstance(phone, str):
         return None
-
     phone = phone.strip()
-
     if re.fullmatch(r"\+?375\d{9}", phone):
         return phone.lstrip("+")
-
     return None
+
+
+def is_int_0_100(value: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    value = value.strip()
+    if not value.isdecimal():
+        return False
+    number = int(value)
+    return 0 <= number <= 100

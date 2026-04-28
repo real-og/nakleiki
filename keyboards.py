@@ -47,6 +47,19 @@ def get_type_transport_recommendation_kb(type_transport_variants):
         kb.add(button)
     return kb
 
+def get_users_to_select(users):
+    if users is None:
+        return None
+    kb = InlineKeyboardMarkup()
+    for user in users:
+        number = user[2]
+        name = user[3]
+        user_compiled = name + ' ' + str(number)
+        button = InlineKeyboardButton(text=user_compiled, callback_data=user_compiled)
+        kb.add(button)
+    return kb
+
+
 begin_kb = ReplyKeyboardMarkup([[buttons.begin]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)

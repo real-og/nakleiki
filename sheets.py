@@ -33,6 +33,12 @@ async def get_all_values(worksheet_number):
     all_values = await sheet.get_all_values()
     return all_values
 
+async def get_users():
+    users = await get_all_values(WORKSHEET_BUFFER)
+    if users is not None:
+        return users[1:]
+    
+
 async def get_user(id_tg):
     result = None
     all_ids_numbers = await get_all_values(WORKSHEET_BUFFER)
