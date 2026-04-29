@@ -43,6 +43,7 @@ def form_list_to_append(id_tg, data):
     result.append(data.get('transport_number'))
     result.append(data.get('route_number'))
     result.append(data.get('is_completed'))
+    result.append(len(data.get('photos_passport')))
     result.append(len(data.get('photos_before')))
     result.append(len(data.get('photos_after')))
     result.append(data.get('comment'))

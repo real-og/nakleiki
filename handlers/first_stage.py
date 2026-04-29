@@ -118,18 +118,48 @@ async def send_welcome(message: types.Message, state: FSMContext):
         await state.update_data(transport_number=transport_number)
         await state.update_data(route_number='Отсутствует')
     else:
-        await message.answer(texts.enter_photos_before)
-        await State.entering_photos_before.set()
+        await message.answer(texts.enter_photos_passport)
+        await State.entering_photos_passport.set()
         await state.update_data(transport_number=transport_number)
-
 
 
 @dp.message_handler(state=State.entering_route_number)
 async def send_welcome(message: types.Message, state: FSMContext):
     route_number = message.text
-    await message.answer(texts.enter_photos_before)
-    await State.entering_photos_before.set()
+    await message.answer(texts.enter_photos_passport)
+    await State.entering_photos_passport.set()
     await state.update_data(route_number=route_number)
+
+
+@dp.message_handler(content_types=['any'], state=State.entering_photos_passport)
+async def handle_photo(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    photos_passport = data.get('photos_passport', [])
+    if message.photo or message.document:
+
+        if message.photo:
+            photo = message.photo[-1]
+            filename = f"{uuid.uuid4().hex}.jpg"
+            path = 'photos/' + filename
+            await photo.download(destination_file=str(path))
+
+        elif message.document:
+            doc = message.document
+            if not doc.mime_type or not doc.mime_type.startswith("image/"):
+                await message.answer(texts.error_photo)
+                return
+            ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
+            filename = f"{uuid.uuid4().hex}{ext}"
+            path = 'photos/' + filename
+            await doc.download(destination_file=str(path))
+
+        await message.answer(texts.enter_photos_before)
+        await asyncio.sleep(0.6)
+        await State.entering_photos_before.set()
+        photos_passport.append(filename)
+        await state.update_data(photos_passport=photos_passport)
+    else:
+        await message.answer(texts.error_photo)
 
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_before)

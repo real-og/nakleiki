@@ -12,6 +12,7 @@ class State(StatesGroup):
     entering_type_transport = State()
     entering_transport_number = State()
     entering_route_number = State()
+    entering_photos_passport = State()
     entering_photos_before = State()
     working_on = State()
 

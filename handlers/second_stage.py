@@ -72,6 +72,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
             data = await state.get_data()
             report = texts.generate_report(data)
             await message.answer(report)
+            await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
             await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
             await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
             await message.answer(texts.enter_finish, reply_markup=kb.send_kb)
@@ -118,6 +119,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 
     report = texts.generate_report(data)
     await callback.message.answer(report)
+    await side_logic.send_photos_album(callback.message, data.get('photos_passport'),texts.photos_passport)
     await side_logic.send_photos_album(callback.message, data.get('photos_before'),texts.photos_before)
     await side_logic.send_photos_album(callback.message, data.get('photos_after'),texts.photos_after)
     await callback.message.answer(texts.enter_finish, reply_markup=kb.send_kb)
@@ -137,6 +139,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
         report = texts.generate_report(data)
         await bot.send_message(config_io.get_value('CHAT_ID'), report)
+        await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport, bot)
         await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before, bot)
         await side_logic.send_photos_album(message, data.get('photos_after'), texts.photos_after, bot)
 
