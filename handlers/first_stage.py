@@ -108,9 +108,20 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_transport_number)
 async def send_welcome(message: types.Message, state: FSMContext):
     transport_number = message.text
-    await message.answer(texts.enter_route_number)
-    await State.entering_route_number.set()
-    await state.update_data(transport_number=transport_number)
+
+    data = await state.get_data()
+    type_transport = data.get('type_transport')
+
+    if type_transport == 'Маршрутка':
+        await message.answer(texts.enter_route_number)
+        await State.entering_route_number.set()
+        await state.update_data(transport_number=transport_number)
+        await state.update_data(route_number='Отсутствует')
+    else:
+        await message.answer(texts.enter_photos_before)
+        await State.entering_photos_before.set()
+        await state.update_data(transport_number=transport_number)
+
 
 
 @dp.message_handler(state=State.entering_route_number)
