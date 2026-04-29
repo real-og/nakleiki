@@ -1,4 +1,5 @@
 import re
+import os
 from datetime import datetime
 
 from aiogram import types
@@ -73,3 +74,10 @@ def is_int_0_100(value: str) -> bool:
         return False
     number = int(value)
     return 0 <= number <= 100
+
+def delete_files_from_folder(filenames: list[str], folder: str) -> None:
+    for filename in filenames:
+        path = os.path.join(folder, filename)
+
+        if os.path.isfile(path):
+            os.remove(path)

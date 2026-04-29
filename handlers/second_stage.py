@@ -145,7 +145,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     if message.text == buttons.send:
         data = await state.get_data()
 
-        await message.answer(texts.result_saved, kb.begin_kb)
+        await message.answer(texts.result_saved, reply_markup=kb.begin_kb)
         await State.entering_begin.set()
 
         report = texts.generate_report(data)
@@ -156,6 +156,9 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
         row_data = side_logic.form_list_to_append(message.from_user.id, data)
         await sheets.append_row_to_work_notes(row_data)
+        side_logic.delete_files_from_folder(data.get('photos_passport', []), 'photos')
+        side_logic.delete_files_from_folder(data.get('photos_before', []), 'photos')
+        side_logic.delete_files_from_folder(data.get('photos_after', []), 'photos')
     else:
         await message.answer(texts.use_buttons, reply_markup=kb.send_kb)
 

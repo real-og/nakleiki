@@ -30,6 +30,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         return
 
     recommendation_city = await sheets.get_city_recommendation()
+    await message.answer(texts.begin_tapped, reply_markup=ReplyKeyboardRemove())
     await message.answer(texts.enter_your_city, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
     await State.entering_your_city.set()
     user = await sheets.get_user(message.from_user.id)
