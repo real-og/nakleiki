@@ -1,4 +1,5 @@
 import re
+from datetime import datetime
 
 from aiogram import types
 from pathlib import Path
@@ -32,7 +33,7 @@ async def send_photos_album(
         await message.answer_media_group(media)
 
 def form_list_to_append(id_tg, data):
-    result = [id_tg]
+    result = [datetime.now().strftime("%Y-%m-%d %H:%M:%S"), id_tg]
     result.append(data.get('worker_number'))
     result.append(data.get('worker_name'))
     result.append(data.get('city'))
