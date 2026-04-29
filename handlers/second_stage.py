@@ -1,6 +1,7 @@
 import uuid
 import os
 import asyncio
+from collections import defaultdict
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -15,6 +16,10 @@ import keyboards as kb
 from states import State
 from loader import dp, bot
 
+MIN_AFTER_PHOTOS = 4
+
+USER_PHOTO_LOCKS = defaultdict(asyncio.Lock)
+
 
 @dp.message_handler(state=State.working_on)
 async def send_welcome(message: types.Message, state: FSMContext):
@@ -28,33 +33,39 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_after)
 async def handle_photo(message: types.Message, state: FSMContext):
-    if message.photo or message.document:
+    user_id = message.from_user.id
+
+    async with USER_PHOTO_LOCKS[user_id]:
         data = await state.get_data()
         photos_after = data.get('photos_after', [])
+        if message.photo or message.document:
 
-        if message.photo:
-            photo = message.photo[-1]
-            filename = f"{uuid.uuid4().hex}.jpg"
-            path = 'photos/' + filename
-            await photo.download(destination_file=str(path))
+            if message.photo:
+                photo = message.photo[-1]
+                filename = f"{uuid.uuid4().hex}.jpg"
+                path = 'photos/' + filename
+                await photo.download(destination_file=str(path))
 
-        elif message.document:
-            doc = message.document
-            if not doc.mime_type or not doc.mime_type.startswith("image/"):
-                await message.answer(texts.error_photo)
-                return
-            ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
-            filename = f"{uuid.uuid4().hex}{ext}"
-            path = 'photos/' + filename
-            await doc.download(destination_file=str(path))
+            elif message.document:
+                doc = message.document
+                if not doc.mime_type or not doc.mime_type.startswith("image/"):
+                    await message.answer(texts.error_photo)
+                    return
+                ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
+                filename = f"{uuid.uuid4().hex}{ext}"
+                path = 'photos/' + filename
+                await doc.download(destination_file=str(path))
 
-        await message.answer(texts.enter_comment, reply_markup=kb.skip_comment_kb)
-        await asyncio.sleep(1)
-        await State.entering_comment.set()
-        photos_after.append(filename)
-        await state.update_data(photos_after=photos_after)
-    else:
-        await message.answer(texts.error_photo)
+            photos_after.append(filename)
+            photos_count = len(photos_after)
+            await state.update_data(photos_after=photos_after)
+            if photos_count <= MIN_AFTER_PHOTOS:
+                await message.answer(f"Принято {photos_count}/{MIN_AFTER_PHOTOS} фото.")
+            if photos_count == MIN_AFTER_PHOTOS:
+                await message.answer(texts.enter_comment, reply_markup=kb.skip_comment_kb)
+                await State.entering_comment.set()
+        else:
+            await message.answer(texts.error_photo)
 
 
 @dp.message_handler(state=State.entering_comment)

@@ -1,6 +1,7 @@
 import uuid
 import os
 import asyncio
+from collections import defaultdict
 
 from aiogram import types
 from aiogram.dispatcher import FSMContext
@@ -12,6 +13,12 @@ import buttons
 import keyboards as kb
 from states import State
 from loader import dp
+
+MIN_PASSPORT_PHOTOS = 2
+MIN_BEFORE_PHOTOS = 4
+MIN_AFTER_PHOTOS = 4
+
+USER_PHOTO_LOCKS = defaultdict(asyncio.Lock)
 
 
 
@@ -133,64 +140,76 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_passport)
 async def handle_photo(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    photos_passport = data.get('photos_passport', [])
-    if message.photo or message.document:
+    user_id = message.from_user.id
 
-        if message.photo:
-            photo = message.photo[-1]
-            filename = f"{uuid.uuid4().hex}.jpg"
-            path = 'photos/' + filename
-            await photo.download(destination_file=str(path))
+    async with USER_PHOTO_LOCKS[user_id]:
+        data = await state.get_data()
+        photos_passport = data.get('photos_passport', [])
+        if message.photo or message.document:
 
-        elif message.document:
-            doc = message.document
-            if not doc.mime_type or not doc.mime_type.startswith("image/"):
-                await message.answer(texts.error_photo)
-                return
-            ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
-            filename = f"{uuid.uuid4().hex}{ext}"
-            path = 'photos/' + filename
-            await doc.download(destination_file=str(path))
+            if message.photo:
+                photo = message.photo[-1]
+                filename = f"{uuid.uuid4().hex}.jpg"
+                path = 'photos/' + filename
+                await photo.download(destination_file=str(path))
 
-        await message.answer(texts.enter_photos_before)
-        await asyncio.sleep(0.6)
-        await State.entering_photos_before.set()
-        photos_passport.append(filename)
-        await state.update_data(photos_passport=photos_passport)
-    else:
-        await message.answer(texts.error_photo)
+            elif message.document:
+                doc = message.document
+                if not doc.mime_type or not doc.mime_type.startswith("image/"):
+                    await message.answer(texts.error_photo)
+                    return
+                ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
+                filename = f"{uuid.uuid4().hex}{ext}"
+                path = 'photos/' + filename
+                await doc.download(destination_file=str(path))
+
+            photos_passport.append(filename)
+            photos_count = len(photos_passport)
+            await state.update_data(photos_passport=photos_passport)
+            if photos_count <= MIN_PASSPORT_PHOTOS:
+                await message.answer(f"Принято {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
+            if photos_count == MIN_PASSPORT_PHOTOS:
+                await message.answer(texts.enter_photos_before)
+                await State.entering_photos_before.set()
+        else:
+            await message.answer(texts.error_photo)
 
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_before)
 async def handle_photo(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    photos_before = data.get('photos_before', [])
-    if message.photo or message.document:
+    user_id = message.from_user.id
 
-        if message.photo:
-            photo = message.photo[-1]
-            filename = f"{uuid.uuid4().hex}.jpg"
-            path = 'photos/' + filename
-            await photo.download(destination_file=str(path))
+    async with USER_PHOTO_LOCKS[user_id]:
+        data = await state.get_data()
+        photos_before = data.get('photos_before', [])
+        if message.photo or message.document:
 
-        elif message.document:
-            doc = message.document
-            if not doc.mime_type or not doc.mime_type.startswith("image/"):
-                await message.answer(texts.error_photo)
-                return
-            ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
-            filename = f"{uuid.uuid4().hex}{ext}"
-            path = 'photos/' + filename
-            await doc.download(destination_file=str(path))
+            if message.photo:
+                photo = message.photo[-1]
+                filename = f"{uuid.uuid4().hex}.jpg"
+                path = 'photos/' + filename
+                await photo.download(destination_file=str(path))
 
-        await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
-        await asyncio.sleep(1)
-        await State.working_on.set()
-        photos_before.append(filename)
-        await state.update_data(photos_before=photos_before)
-    else:
-        await message.answer(texts.error_photo)
+            elif message.document:
+                doc = message.document
+                if not doc.mime_type or not doc.mime_type.startswith("image/"):
+                    await message.answer(texts.error_photo)
+                    return
+                ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
+                filename = f"{uuid.uuid4().hex}{ext}"
+                path = 'photos/' + filename
+                await doc.download(destination_file=str(path))
+
+            photos_before.append(filename)
+            photos_count = len(photos_before)
+            await state.update_data(photos_before=photos_before)
+            if photos_count <= MIN_BEFORE_PHOTOS:
+                await message.answer(f"Принято {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
+            if photos_count == MIN_BEFORE_PHOTOS:
+                await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
+                await State.working_on.set()
+        else:
+            await message.answer(texts.error_photo)
     
 
     

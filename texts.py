@@ -74,3 +74,5 @@ def generate_report(data):
 Выполнил <b>{data.get('teammates_percent')[i]}</b> процентов\n"""
             
     return result
+
+photo_need_reached = 'Нужное количество фото достигнуто'
