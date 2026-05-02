@@ -131,7 +131,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         await message.answer(texts.enter_representative, kb.no_info_kb)
         await State.entering_representative.set()
     else:
-        await message.answer(texts.enter_photos_passport)
+        await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
         await State.entering_photos_passport.set()
     await state.update_data(transport_number=transport_number)
 
@@ -145,7 +145,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         await message.answer(texts.enter_route_number)
         await State.entering_route_number.set()
     else:
-        await message.answer(texts.enter_photos_passport)
+        await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
         await State.entering_photos_passport.set()
     await state.update_data(representative=representative)
 
@@ -153,24 +153,21 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.message_handler(state=State.entering_route_number)
 async def send_welcome(message: types.Message, state: FSMContext):
     route_number = message.text
-    await message.answer(texts.enter_photos_passport)
+    await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
     await State.entering_photos_passport.set()
     await state.update_data(route_number=route_number)
 
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_passport)
 async def handle_photo(message: types.Message, state: FSMContext):
-    print(message)
     user_id = message.from_user.id
 
     async with USER_PHOTO_LOCKS[user_id]:
         data = await state.get_data()
         photos_passport = data.get('photos_passport', [])
         if message.photo or message.document:
-            print(1)
 
             if message.photo:
-                print(2)
                 photo = message.photo[-1]
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
@@ -195,6 +192,10 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 await message.answer(texts.enter_photos_before)
                 await State.entering_photos_before.set()
         else:
+            if message.text == buttons.no_info:
+                await message.answer(texts.enter_photos_before, reply_markup=ReplyKeyboardRemove())
+                await State.entering_photos_before.set()
+
             await message.answer(texts.error_photo)
 
 
