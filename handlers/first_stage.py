@@ -1,5 +1,6 @@
 import uuid
 import os
+import datetime
 import asyncio
 from collections import defaultdict
 
@@ -37,6 +38,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     user = await sheets.get_user(message.from_user.id)
     await state.update_data(worker_number=user[2])
     await state.update_data(worker_name=user[3])
+    await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
 
 @dp.message_handler(state=State.entering_your_city)
@@ -91,6 +93,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     if data.get('is_combo'):
         await message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
         await State.working_on.set()
+        await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     else:
         recommendation_type_transport = await sheets.get_type_transport_recommendation()
         await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
@@ -202,14 +205,16 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 if data.get('type_work') == 'Демонтаж-Монтаж':
                     await message.answer(texts.enter_photos_before_demontage, reply_markup=ReplyKeyboardRemove())
                 else:
-                    await message.answer(texts.enter_photos_before)
+                    text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
+                    await message.answer(text)
                 await State.entering_photos_before.set()
         else:
             if message.text == buttons.no_info:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
                     await message.answer(texts.enter_photos_before_demontage, reply_markup=ReplyKeyboardRemove())
                 else:
-                    await message.answer(texts.enter_photos_before, reply_markup=ReplyKeyboardRemove())
+                    text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
+                    await message.answer(text)
                 await State.entering_photos_before.set()
             else:
                 await message.answer(texts.error_photo)

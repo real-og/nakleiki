@@ -1,6 +1,7 @@
 import uuid
 import os
 import asyncio
+import datetime
 from collections import defaultdict
 
 from aiogram import types
@@ -28,7 +29,8 @@ async def send_welcome(message: types.Message, state: FSMContext):
         if data.get('type_work') == 'Демонтаж-Монтаж':
             await message.answer(texts.enter_photos_after_demontage, reply_markup=ReplyKeyboardRemove())
         else:
-            await message.answer(texts.enter_photos_after, reply_markup=ReplyKeyboardRemove())
+            text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
+            await message.answer(text, reply_markup=ReplyKeyboardRemove())
         await State.entering_photos_after.set()
         await state.update_data(is_completed=message.text)
     else:
@@ -71,6 +73,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 else:
                     await message.answer(texts.enter_comment, reply_markup=kb.skip_comment_kb)
                 await State.entering_comment.set()
+                await state.update_data(end_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
         else:
             await message.answer(texts.error_photo)
 
