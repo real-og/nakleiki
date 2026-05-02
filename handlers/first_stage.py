@@ -9,6 +9,7 @@ from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
 import sheets
+import side_logic
 import texts
 import buttons
 import keyboards as kb
@@ -137,7 +138,11 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_transport_number)
 async def send_welcome(message: types.Message, state: FSMContext):
     transport_number = message.text
-
+    transport_number = side_logic.normalize_belarus_plate(transport_number)
+    if transport_number is None:
+        await message.answer(texts.bad_plate)
+        await message.answer(texts.enter_transport_number)
+        return
     data = await state.get_data()
     type_transport = data.get('type_transport')
     if type_transport in ['Маршрутка', 'Такси']:

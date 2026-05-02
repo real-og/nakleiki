@@ -101,6 +101,44 @@ async def remake_data_after_demontage(state):
     await state.update_data(solo_percent=None)
     await state.update_data(teammates=[])
     await state.update_data(teammates_percent=[])
+
+
+
+def normalize_belarus_plate(value: str):
+    if not isinstance(value, str):
+        return None
+
+    ru_to_en = str.maketrans({
+        "А": "A",
+        "В": "B",
+        "Е": "E",
+        "К": "K",
+        "М": "M",
+        "Н": "H",
+        "О": "O",
+        "Р": "P",
+        "С": "C",
+        "Т": "T",
+        "У": "Y",
+        "Х": "X",
+    })
+
+    plate = value.strip().upper().replace(" ", "").translate(ru_to_en)
+
+    letters = "ABEKMHOPCTYX"
+
+    patterns = [
+        rf"^[{letters}]{{2}}\d{{4}}-[1-8]$",   # AB9704-7
+        rf"^\d{{4}}[{letters}]{{2}}-[1-8]$",   # 9889BA-1
+        rf"^E\d{{3}}[{letters}]{{2}}-[1-8]$",  # E001AA-7
+        rf"^[{letters}]{{2}}-\d{{5}}$",        # AO-78912
+        rf"^\d[{letters}]{{3}}\d{{4}}$",       # 2EHT3624
+    ]
+
+    if any(re.fullmatch(pattern, plate) for pattern in patterns):
+        return plate
+
+    return None
     
     
 
