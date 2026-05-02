@@ -6,3 +6,4 @@ key.json
 test.py
 photos
 key_mtrans.json
+__pycache__

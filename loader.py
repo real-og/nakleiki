@@ -8,8 +8,10 @@ import config_io
 logging.basicConfig(level=logging.WARNING)
 
 BOT_TOKEN = config_io.get_value('BOT_TOKEN')
+PROXY = config_io.get_value('PROXY')
 
 storage = RedisStorage2(db=1)
 
-bot = Bot(token=BOT_TOKEN, parse_mode="HTML")
+
+bot = Bot(token=BOT_TOKEN, parse_mode="HTML", proxy=PROXY)
 dp = Dispatcher(bot, storage=storage)
