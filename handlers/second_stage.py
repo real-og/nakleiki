@@ -1,7 +1,7 @@
 import uuid
 import os
 import asyncio
-import datetime
+from datetime  import datetime
 from collections import defaultdict
 
 from aiogram import types
