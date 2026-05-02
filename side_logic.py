@@ -125,7 +125,7 @@ def normalize_belarus_plate(value: str):
 
     plate = value.strip().upper().replace(" ", "").translate(ru_to_en)
 
-    letters = "ABEKMHOPCTYX"
+    letters = "ABEKMHOPCTYXI"
 
     patterns = [
         rf"^[{letters}]{{2}}\d{{4}}-[1-8]$",   # AB9704-7

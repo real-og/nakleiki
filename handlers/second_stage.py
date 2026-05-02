@@ -29,7 +29,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         if data.get('type_work') == 'Демонтаж-Монтаж':
             await message.answer(texts.enter_photos_after_demontage, reply_markup=ReplyKeyboardRemove())
         else:
-            text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
+            text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_after
             await message.answer(text, reply_markup=ReplyKeyboardRemove())
         await State.entering_photos_after.set()
         await state.update_data(is_completed=message.text)
