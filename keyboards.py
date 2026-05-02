@@ -82,7 +82,7 @@ finish_kb = ReplyKeyboardMarkup([[buttons.finish]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-send_kb = ReplyKeyboardMarkup([[buttons.send]],
+send_kb = ReplyKeyboardMarkup([[buttons.send, buttons.reset]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 

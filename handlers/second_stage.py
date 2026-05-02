@@ -220,6 +220,11 @@ async def send_welcome(message: types.Message, state: FSMContext):
         else:
             await message.answer(texts.result_saved, reply_markup=kb.begin_kb)
             await State.entering_begin.set()
+    elif message.text == buttons.reset:
+        await message.answer("Данные по этой работе сброшены")
+        await state.finish()
+        await State.entering_begin.set()
+        await message.answer("Можете приступать к следующей работе. Нажимайте или вводите <b>Приступить</b>", reply_markup=kb.begin_kb)
     else:
         await message.answer(texts.use_buttons, reply_markup=kb.send_kb)
 
