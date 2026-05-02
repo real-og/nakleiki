@@ -87,17 +87,27 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_narrative)
 async def send_welcome(message: types.Message, state: FSMContext):
     narrative = message.text
-    recommendation_type_transport = await sheets.get_type_transport_recommendation()
-    await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
-    await State.entering_type_transport.set()
+    data = await state.get_data()
+    if data.get('is_combo'):
+        await message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
+        await State.working_on.set()
+    else:
+        recommendation_type_transport = await sheets.get_type_transport_recommendation()
+        await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
+        await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
 
 @dp.callback_query_handler(state=State.entering_narrative)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     narrative = callback.data
-    recommendation_type_transport = await sheets.get_type_transport_recommendation()
-    await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
-    await State.entering_type_transport.set()
+    data = await state.get_data()
+    if data.get('is_combo'):
+        await callback.message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
+        await State.working_on.set()
+    else:
+        recommendation_type_transport = await sheets.get_type_transport_recommendation()
+        await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
+        await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
     await callback.answer()
     await callback.message.edit_reply_markup(reply_markup=None)
@@ -128,7 +138,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     data = await state.get_data()
     type_transport = data.get('type_transport')
     if type_transport in ['Маршрутка', 'Такси']:
-        await message.answer(texts.enter_representative, kb.no_info_kb)
+        await message.answer(texts.enter_representative, reply_markup=kb.no_info_kb)
         await State.entering_representative.set()
     else:
         await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
@@ -189,14 +199,20 @@ async def handle_photo(message: types.Message, state: FSMContext):
             if photos_count <= MIN_PASSPORT_PHOTOS:
                 await message.answer(f"Принято {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
             if photos_count == MIN_PASSPORT_PHOTOS:
-                await message.answer(texts.enter_photos_before)
+                if data.get('type_work') == 'Демонтаж-Монтаж':
+                    await message.answer(texts.enter_photos_before_demontage, reply_markup=ReplyKeyboardRemove())
+                else:
+                    await message.answer(texts.enter_photos_before)
                 await State.entering_photos_before.set()
         else:
             if message.text == buttons.no_info:
-                await message.answer(texts.enter_photos_before, reply_markup=ReplyKeyboardRemove())
+                if data.get('type_work') == 'Демонтаж-Монтаж':
+                    await message.answer(texts.enter_photos_before_demontage, reply_markup=ReplyKeyboardRemove())
+                else:
+                    await message.answer(texts.enter_photos_before, reply_markup=ReplyKeyboardRemove())
                 await State.entering_photos_before.set()
-
-            await message.answer(texts.error_photo)
+            else:
+                await message.answer(texts.error_photo)
 
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_before)
@@ -230,7 +246,10 @@ async def handle_photo(message: types.Message, state: FSMContext):
             if photos_count <= MIN_BEFORE_PHOTOS:
                 await message.answer(f"Принято {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
             if photos_count == MIN_BEFORE_PHOTOS:
-                await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
+                if data.get('type_work') == 'Демонтаж-Монтаж':
+                    await message.answer(texts.go_to_demontage, reply_markup=kb.completed_work_kb)
+                else:
+                    await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
                 await State.working_on.set()
         else:
             await message.answer(texts.error_photo)

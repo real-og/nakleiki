@@ -10,6 +10,7 @@ from loader import dp
 
 @dp.message_handler(commands=['start'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
+    print(message)
     await message.answer(texts.start_message)
     await state.finish()
     user = await sheets.get_user(message.from_user.id)

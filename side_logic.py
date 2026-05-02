@@ -38,14 +38,17 @@ def form_list_to_append(id_tg, data):
     result.append(data.get('worker_number'))
     result.append(data.get('worker_name'))
     result.append(data.get('city'))
-    result.append(data.get('type_work'))
+    if data.get('type_work') == 'Демонтаж-Монтаж':
+        result.append('Демонтаж')
+    else:
+        result.append(data.get('type_work'))
     result.append(data.get('narrative'))
     result.append(data.get('type_transport'))
     result.append(data.get('transport_number'))
     result.append(data.get('representative'))
     result.append(data.get('route_number'))
     result.append(data.get('is_completed'))
-    result.append(len(data.get('photos_passport')))
+    result.append(len(data.get('photos_passport', [])))
     result.append(len(data.get('photos_before')))
     result.append(len(data.get('photos_after')))
     result.append(data.get('comment'))
@@ -82,3 +85,19 @@ def delete_files_from_folder(filenames: list[str], folder: str) -> None:
 
         if os.path.isfile(path):
             os.remove(path)
+
+async def remake_data_after_demontage(state):
+    data = await state.get_data()
+    await state.update_data(is_combo=1)
+    await state.update_data(type_work='Монтаж')
+    await state.update_data(is_completed=-1)
+    await state.update_data(photos_before=data.get('photos_after'))
+    await state.update_data(photos_after=[])
+    await state.update_data(comment=None)
+    await state.update_data(working_solo=None)
+    await state.update_data(solo_percent=None)
+    await state.update_data(teammates=[])
+    await state.update_data(teammates_percent=[])
+    
+    
+
