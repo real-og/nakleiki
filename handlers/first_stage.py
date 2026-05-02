@@ -28,7 +28,8 @@ async def send_welcome(message: types.Message, state: FSMContext):
     if not(user_input == buttons.begin):
         await message.answer(texts.use_buttons, reply_markup=kb.begin_kb)
         return
-
+    
+    await state.finish()
     recommendation_city = await sheets.get_city_recommendation()
     await message.answer(texts.begin_tapped, reply_markup=ReplyKeyboardRemove())
     await message.answer(texts.enter_your_city, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
@@ -62,7 +63,10 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 async def send_welcome(message: types.Message, state: FSMContext):
     type_work = message.text
     recommendation_narrative = await sheets.get_narrative_recommendation()
-    await message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+    text_to_answer = texts.enter_narrative
+    if type_work == 'Демонтаж-Монтаж':
+        text_to_answer += '<b> демонтажа</b>'
+    await message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
     await State.entering_narrative.set()
     await state.update_data(type_work=type_work)
 
@@ -70,7 +74,10 @@ async def send_welcome(message: types.Message, state: FSMContext):
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     type_work = callback.data
     recommendation_narrative = await sheets.get_narrative_recommendation()
-    await callback.message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+    text_to_answer = texts.enter_narrative
+    if type_work == 'Демонтаж-Монтаж':
+        text_to_answer += '<b> демонтажа</b>'
+    await callback.message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
     await State.entering_narrative.set()
     await state.update_data(type_work=type_work)
     await callback.answer()
@@ -99,18 +106,34 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_type_transport)
 async def send_welcome(message: types.Message, state: FSMContext):
     type_transport = message.text
-    await message.answer(texts.enter_transport_number)
-    await State.entering_transport_number.set()
+    if type_transport in ['Маршрутка', 'Такси']:
+        await message.answer(texts.enter_representative, kb.no_info_kb)
+        await State.entering_representative.set()
+    else:
+        await message.answer(texts.enter_transport_number)
+        await State.entering_transport_number.set()
     await state.update_data(type_transport=type_transport)
 
 @dp.callback_query_handler(state=State.entering_type_transport)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     type_transport = callback.data
-    await callback.message.answer(texts.enter_transport_number)
-    await State.entering_transport_number.set()
     await state.update_data(type_transport=type_transport)
+    if type_transport in ['Маршрутка', 'Такси']:
+        await callback.message.answer(texts.enter_representative, kb.no_info_kb)
+        await State.entering_representative.set()
+    else:
+        await callback.message.answer(texts.enter_transport_number)
+        await State.entering_transport_number.set()
     await callback.answer()
     await callback.message.edit_reply_markup(reply_markup=None)
+
+
+@dp.message_handler(state=State.entering_representative)
+async def send_welcome(message: types.Message, state: FSMContext):
+    representative = message.text
+    await message.answer(texts.enter_transport_number)
+    await State.entering_transport_number.set()
+    await state.update_data(representative=representative)
 
 
 @dp.message_handler(state=State.entering_transport_number)
@@ -141,14 +164,17 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_passport)
 async def handle_photo(message: types.Message, state: FSMContext):
+    print(message)
     user_id = message.from_user.id
 
     async with USER_PHOTO_LOCKS[user_id]:
         data = await state.get_data()
         photos_passport = data.get('photos_passport', [])
         if message.photo or message.document:
+            print(1)
 
             if message.photo:
+                print(2)
                 photo = message.photo[-1]
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename

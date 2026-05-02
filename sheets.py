@@ -10,7 +10,7 @@ WORKSHEET_CONFIG = 1
 WORKSHEET_WORK_NOTES = 2
 
 def get_creds():
-    creds = Credentials.from_service_account_file("key.json")
+    creds = Credentials.from_service_account_file("key_mtrans.json")
     scoped = creds.with_scopes([
         "https://spreadsheets.google.com/feeds",
         "https://www.googleapis.com/auth/spreadsheets",

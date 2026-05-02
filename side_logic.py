@@ -41,6 +41,7 @@ def form_list_to_append(id_tg, data):
     result.append(data.get('type_work'))
     result.append(data.get('narrative'))
     result.append(data.get('type_transport'))
+    result.append(data.get('representative'))
     result.append(data.get('transport_number'))
     result.append(data.get('route_number'))
     result.append(data.get('is_completed'))

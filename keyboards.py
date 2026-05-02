@@ -86,4 +86,8 @@ send_kb = ReplyKeyboardMarkup([[buttons.send]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
+no_info_kb = ReplyKeyboardMarkup([[buttons.no_info]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
+
 

@@ -10,6 +10,7 @@ class State(StatesGroup):
     entering_type_work = State()
     entering_narrative = State()
     entering_type_transport = State()
+    entering_representative = State()
     entering_transport_number = State()
     entering_route_number = State()
     entering_photos_passport = State()
