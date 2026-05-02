@@ -64,35 +64,8 @@ def generate_report(data):
 Город: <b>{data.get('city')}</b>
 Вид работ: <b>{data.get('type_work')}</b>
 Сюжет: <b>{data.get('narrative')}</b>
-Вид транспорта: <b>{data.get('type_transport')}</b>{representative_row}
-Номер машины: <b>{data.get('transport_number')}</b>
-Номер маршрута: <b>{data.get('route_number')}</b>
-Выполнено: <b>{data.get('is_completed')}</b>
-Фотографий техпаспорта: <b>{len(data.get('photos_passport'))}</b>
-Фотографий до: <b>{len(data.get('photos_before'))}</b>
-Фотографий после: <b>{len(data.get('photos_after'))}</b>
-Комментарий: <b>{data.get('comment')}</b>
-"""
-    if data.get('working_solo') == buttons.no:
-        result += f"""\nСделал сам <b>{data.get('solo_percent')}</b> процентов\n"""
-        for i in range(len(data.get('teammates'))):
-            result += f"""Помощник <b>{data.get('teammates')[i]}</b>
-Выполнил <b>{data.get('teammates_percent')[i]}</b> процентов\n"""
-            
-    return result
-
-def generate_report(data):
-
-    if data.get('representative'):
-        representative_row = f"Юр.лицо: <b>{data.get('representativer')}</b>"
-
-    result = f"""Исполнитель: <b>{data.get('worker_name')}</b>
-Номер исполнителя: <b>{data.get('worker_number')}</b>
-Город: <b>{data.get('city')}</b>
-Вид работ: <b>{data.get('type_work')}</b>
-Сюжет: <b>{data.get('narrative')}</b>
 Вид транспорта: <b>{data.get('type_transport')}</b>
-Номер машины: <b>{data.get('transport_number')}</b>
+Номер машины: <b>{data.get('transport_number')}</b>{representative_row}
 Номер маршрута: <b>{data.get('route_number')}</b>
 Выполнено: <b>{data.get('is_completed')}</b>
 Фотографий техпаспорта: <b>{len(data.get('photos_passport'))}</b>
@@ -107,6 +80,8 @@ def generate_report(data):
 Выполнил <b>{data.get('teammates_percent')[i]}</b> процентов\n"""
             
     return result
+
+
 
 photo_need_reached = 'Нужное количество фото достигнуто'
 

@@ -106,34 +106,19 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_type_transport)
 async def send_welcome(message: types.Message, state: FSMContext):
     type_transport = message.text
-    if type_transport in ['Маршрутка', 'Такси']:
-        await message.answer(texts.enter_representative, kb.no_info_kb)
-        await State.entering_representative.set()
-    else:
-        await message.answer(texts.enter_transport_number)
-        await State.entering_transport_number.set()
+    await message.answer(texts.enter_transport_number)
+    await State.entering_transport_number.set()
     await state.update_data(type_transport=type_transport)
 
 @dp.callback_query_handler(state=State.entering_type_transport)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     type_transport = callback.data
     await state.update_data(type_transport=type_transport)
-    if type_transport in ['Маршрутка', 'Такси']:
-        await callback.message.answer(texts.enter_representative, kb.no_info_kb)
-        await State.entering_representative.set()
-    else:
-        await callback.message.answer(texts.enter_transport_number)
-        await State.entering_transport_number.set()
+    await callback.message.answer(texts.enter_transport_number)
+    await State.entering_transport_number.set()
     await callback.answer()
     await callback.message.edit_reply_markup(reply_markup=None)
 
-
-@dp.message_handler(state=State.entering_representative)
-async def send_welcome(message: types.Message, state: FSMContext):
-    representative = message.text
-    await message.answer(texts.enter_transport_number)
-    await State.entering_transport_number.set()
-    await state.update_data(representative=representative)
 
 
 @dp.message_handler(state=State.entering_transport_number)
@@ -142,16 +127,27 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
     data = await state.get_data()
     type_transport = data.get('type_transport')
-
-    if type_transport == 'Маршрутка':
-        await message.answer(texts.enter_route_number)
-        await State.entering_route_number.set()
-        await state.update_data(transport_number=transport_number)
-        await state.update_data(route_number='Отсутствует')
+    if type_transport in ['Маршрутка', 'Такси']:
+        await message.answer(texts.enter_representative, kb.no_info_kb)
+        await State.entering_representative.set()
     else:
         await message.answer(texts.enter_photos_passport)
         await State.entering_photos_passport.set()
-        await state.update_data(transport_number=transport_number)
+    await state.update_data(transport_number=transport_number)
+
+
+@dp.message_handler(state=State.entering_representative)
+async def send_welcome(message: types.Message, state: FSMContext):
+    representative = message.text
+    data = await state.get_data()
+    type_transport = data.get('type_transport')
+    if type_transport == 'Маршрутка':
+        await message.answer(texts.enter_route_number)
+        await State.entering_route_number.set()
+    else:
+        await message.answer(texts.enter_photos_passport)
+        await State.entering_photos_passport.set()
+    await state.update_data(representative=representative)
 
 
 @dp.message_handler(state=State.entering_route_number)
