@@ -106,27 +106,54 @@ async def send_welcome(message: types.Message, state: FSMContext):
             await State.last_check.set()
 
         elif message.text == buttons.no:
-            await message.answer(texts.enter_your_percent, reply_markup=ReplyKeyboardRemove())
+            await message.answer(texts.enter_your_percent, reply_markup=kb.get_percent_kb())
             await State.entering_my_percent.set()
         await state.update_data(working_solo=message.text)
     else:
         await message.answer(texts.use_buttons, reply_markup=kb.yes_no_kb)
 
 
-@dp.message_handler(state=State.entering_my_percent)
-async def send_welcome(message: types.Message, state: FSMContext):
-    solo_percent = message.text
+# @dp.message_handler(state=State.entering_my_percent)
+# async def send_welcome(message: types.Message, state: FSMContext):
+#     solo_percent = message.text
+#     if side_logic.is_int_0_100(solo_percent):
+#         users = await sheets.get_users()
+#         data = await state.get_data()
+#         if data.get('type_work') == 'Демонтаж-Монтаж':
+#             await message.answer(texts.enter_coworker_demontage, reply_markup=kb.get_users_to_select(users))
+#         else:
+#             await message.answer(texts.enter_coworker, reply_markup=kb.get_users_to_select(users))
+#         await State.adding_coworker.set()
+#         await state.update_data(solo_percent=solo_percent)
+#     else:
+#         await message.answer(texts.bad_percent)
+
+@dp.callback_query_handler(state=State.entering_my_percent)
+async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+    solo_percent = callback.data
     if side_logic.is_int_0_100(solo_percent):
         users = await sheets.get_users()
         data = await state.get_data()
+
         if data.get('type_work') == 'Демонтаж-Монтаж':
-            await message.answer(texts.enter_coworker_demontage, reply_markup=kb.get_users_to_select(users))
+            await callback.message.answer(
+                texts.enter_coworker_demontage,
+                reply_markup=kb.get_users_to_select(users)
+            )
         else:
-            await message.answer(texts.enter_coworker, reply_markup=kb.get_users_to_select(users))
+            await callback.message.answer(
+                texts.enter_coworker,
+                reply_markup=kb.get_users_to_select(users)
+            )
+
         await State.adding_coworker.set()
         await state.update_data(solo_percent=solo_percent)
+
     else:
-        await message.answer(texts.bad_percent)
+        await callback.message.answer(texts.bad_percent)
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
+
 
 
 

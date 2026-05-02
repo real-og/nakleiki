@@ -90,4 +90,17 @@ no_info_kb = ReplyKeyboardMarkup([[buttons.no_info]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-
+def get_percent_kb():
+    kb = InlineKeyboardMarkup(row_width=3)
+    kb.add(
+        InlineKeyboardButton(text="10", callback_data="10"),
+        InlineKeyboardButton(text="20", callback_data="20"),
+        InlineKeyboardButton(text="30", callback_data="30"),
+        InlineKeyboardButton(text="40", callback_data="40"),
+        InlineKeyboardButton(text="50", callback_data="50"),
+        InlineKeyboardButton(text="60", callback_data="60"),
+        InlineKeyboardButton(text="70", callback_data="70"),
+        InlineKeyboardButton(text="80", callback_data="80"),
+        InlineKeyboardButton(text="90", callback_data="90"),
+    )
+    return kb
