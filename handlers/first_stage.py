@@ -49,6 +49,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
+
     
 
 @dp.callback_query_handler(state=State.entering_your_city)

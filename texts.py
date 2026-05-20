@@ -73,7 +73,7 @@ result_saved = """Результат сохранен. Можете присту
 result_saved_demontage = "Результат демонтажа сохранен, выбирайте сюжет монтажа"
 def generate_report(data):
     if data.get('representative'):
-        representative_row = f"\nЮр.лицо: <b>{data.get('representativer')}</b>"
+        representative_row = f"\nЮр.лицо: <b>{data.get('representative')}</b>"
     else:
         representative_row = ''
     
