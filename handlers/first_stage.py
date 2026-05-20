@@ -204,6 +204,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
             photos_passport.append(filename)
             photos_count = len(photos_passport)
             await state.update_data(photos_passport=photos_passport)
+
             if photos_count <= MIN_PASSPORT_PHOTOS:
                 await message.answer(f"Принято {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
             if photos_count == MIN_PASSPORT_PHOTOS:
@@ -213,6 +214,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
                     text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
                     await message.answer(text)
                 await State.entering_photos_before.set()
+            if photos_count > MIN_PASSPORT_PHOTOS:
+                await message.answer(f"Принято дополнительное {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
         else:
             if message.text == buttons.no_info:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
@@ -253,14 +256,18 @@ async def handle_photo(message: types.Message, state: FSMContext):
             photos_before.append(filename)
             photos_count = len(photos_before)
             await state.update_data(photos_before=photos_before)
-            if photos_count <= MIN_BEFORE_PHOTOS:
-                await message.answer(f"Принято {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
+
+            if photos_count < MIN_BEFORE_PHOTOS:
+                await message.answer(f"Принято обязательное {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
             if photos_count == MIN_BEFORE_PHOTOS:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
                     await message.answer(texts.go_to_demontage, reply_markup=kb.completed_work_kb)
                 else:
                     await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
                 await State.working_on.set()
+            if photos_count > MIN_BEFORE_PHOTOS:
+                await message.answer(f"Принято дополнительное {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
+
         else:
             await message.answer(texts.error_photo)
     

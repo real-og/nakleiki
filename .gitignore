@@ -7,3 +7,5 @@ test.py
 photos
 key_mtrans.json
 __pycache__
+config_dev.json
+config_prod.json

@@ -74,6 +74,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
                     await message.answer(texts.enter_comment, reply_markup=kb.skip_comment_kb)
                 await State.entering_comment.set()
                 await state.update_data(end_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+            if photos_count > MIN_AFTER_PHOTOS:
+                await message.answer(f"Принято дополнительное {photos_count}/{MIN_AFTER_PHOTOS} фото.")
         else:
             await message.answer(texts.error_photo)
 
@@ -115,21 +117,6 @@ async def send_welcome(message: types.Message, state: FSMContext):
     else:
         await message.answer(texts.use_buttons, reply_markup=kb.yes_no_kb)
 
-
-# @dp.message_handler(state=State.entering_my_percent)
-# async def send_welcome(message: types.Message, state: FSMContext):
-#     solo_percent = message.text
-#     if side_logic.is_int_0_100(solo_percent):
-#         users = await sheets.get_users()
-#         data = await state.get_data()
-#         if data.get('type_work') == 'Демонтаж-Монтаж':
-#             await message.answer(texts.enter_coworker_demontage, reply_markup=kb.get_users_to_select(users))
-#         else:
-#             await message.answer(texts.enter_coworker, reply_markup=kb.get_users_to_select(users))
-#         await State.adding_coworker.set()
-#         await state.update_data(solo_percent=solo_percent)
-#     else:
-#         await message.answer(texts.bad_percent)
 
 @dp.callback_query_handler(state=State.entering_my_percent)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
