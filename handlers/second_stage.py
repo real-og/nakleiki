@@ -44,10 +44,14 @@ async def handle_photo(message: types.Message, state: FSMContext):
     async with USER_PHOTO_LOCKS[user_id]:
         data = await state.get_data()
         photos_after = data.get('photos_after', [])
+        photos_after_pic = data.get('photos_after_pic', [])
+        photos_after_doc = data.get('photos_after_doc', [])
         if message.photo or message.document:
 
             if message.photo:
                 photo = message.photo[-1]
+                file_id = message.photo[-1].file_id
+                photos_after_pic.append(file_id)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
                 await photo.download(destination_file=str(path))
@@ -57,6 +61,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 if not doc.mime_type or not doc.mime_type.startswith("image/"):
                     await message.answer(texts.error_photo)
                     return
+                file_id = message.document.file_id
+                photos_after_doc.append(file_id)
                 ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
                 filename = f"{uuid.uuid4().hex}{ext}"
                 path = 'photos/' + filename
@@ -65,6 +71,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
             photos_after.append(filename)
             photos_count = len(photos_after)
             await state.update_data(photos_after=photos_after)
+            await state.update_data(photos_after_doc=photos_after_doc)
+            await state.update_data(photos_after_pic=photos_after_pic)
             if photos_count <= MIN_AFTER_PHOTOS:
                 await message.answer(f"Принято {photos_count}/{MIN_AFTER_PHOTOS} фото.")
             if photos_count == MIN_AFTER_PHOTOS:
@@ -100,9 +108,12 @@ async def send_welcome(message: types.Message, state: FSMContext):
             report = texts.generate_report(data)
             await message.answer(report)
             if data.get('photos_passport'):
-                await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
-            await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
-            await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
+                # await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
+                await side_logic.send_files_by_ids_album(message, data.get('photos_passport_pic'), data.get('photos_passport_doc'), texts.photos_passport)
+            await side_logic.send_files_by_ids_album(message, data.get('photos_before_pic'), data.get('photos_before_doc'), texts.photos_before)
+            await side_logic.send_files_by_ids_album(message, data.get('photos_after_pic'), data.get('photos_after_doc'), texts.photos_after)
+            # await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
+            # await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
             if data.get('type_work') == 'Демонтаж-Монтаж':
                 await message.answer(texts.enter_finish_demontage, reply_markup=kb.send_kb)
             else:
@@ -168,9 +179,12 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     report = texts.generate_report(data)
     await callback.message.answer(report)
     if data.get('photos_passport'):
-        await side_logic.send_photos_album(callback.message, data.get('photos_passport'),texts.photos_passport)
-    await side_logic.send_photos_album(callback.message, data.get('photos_before'),texts.photos_before)
-    await side_logic.send_photos_album(callback.message, data.get('photos_after'),texts.photos_after)
+                # await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
+        await side_logic.send_files_by_ids_album(callback.message, data.get('photos_passport_pic'), data.get('photos_passport_doc'), texts.photos_passport)
+    await side_logic.send_files_by_ids_album(callback.message, data.get('photos_before_pic'), data.get('photos_before_doc'), texts.photos_before)
+    await side_logic.send_files_by_ids_album(callback.message, data.get('photos_after_pic'), data.get('photos_after_doc'), texts.photos_after)
+            # await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
+            # await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
     if data.get('type_work') == 'Демонтаж-Монтаж':
         await callback.message.answer(texts.enter_finish_demontage, reply_markup=kb.send_kb)
     else:
@@ -190,9 +204,10 @@ async def send_welcome(message: types.Message, state: FSMContext):
         report = texts.generate_report(data)
         await bot.send_message(config_io.get_value('CHAT_ID'), report)
         if data.get('photos_passport'):
-            await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport, bot)
-        await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before, bot)
-        await side_logic.send_photos_album(message, data.get('photos_after'), texts.photos_after, bot)
+                # await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
+            await side_logic.send_files_by_ids_album(message, data.get('photos_passport_pic'), data.get('photos_passport_doc'), texts.photos_passport, bot)
+        await side_logic.send_files_by_ids_album(message, data.get('photos_before_pic'), data.get('photos_before_doc'), texts.photos_before, bot)
+        await side_logic.send_files_by_ids_album(message, data.get('photos_after_pic'), data.get('photos_after_doc'), texts.photos_after, bot)
 
         row_data = side_logic.form_list_to_append(message.from_user.id, data)
         await sheets.append_row_to_work_notes(row_data)

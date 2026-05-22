@@ -15,6 +15,6 @@ storage = RedisStorage2(db=1)
 
 bot = Bot(token=BOT_TOKEN,
           parse_mode="HTML",
-          proxy=PROXY
+        #   proxy=PROXY
           )
 dp = Dispatcher(bot, storage=storage)

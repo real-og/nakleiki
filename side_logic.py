@@ -33,6 +33,53 @@ async def send_photos_album(
     else:
         await message.answer_media_group(media)
 
+
+async def send_files_by_ids_album(
+    message: types.Message = None,
+    photo_file_ids: list[str] = None,
+    document_file_ids: list[str] = None,
+    caption: str = "",
+    bot=None,
+):
+    photo_file_ids = photo_file_ids or []
+    document_file_ids = document_file_ids or []
+
+    chat_id = config_io.get_value("CHAT_ID")
+
+    # 1. Сначала отправляем фото, если они есть
+    if photo_file_ids:
+        media_photos = []
+
+        for i, file_id in enumerate(photo_file_ids[:10]):
+            media_photos.append(
+                types.InputMediaPhoto(
+                    media=file_id,
+                    caption=caption if i == 0 else None
+                )
+            )
+
+        if bot:
+            await bot.send_media_group(chat_id, media_photos)
+        else:
+            await message.answer_media_group(media_photos)
+
+    # 2. Потом отправляем документы, если они есть
+    if document_file_ids:
+        media_documents = []
+
+        for i, file_id in enumerate(document_file_ids[:10]):
+            media_documents.append(
+                types.InputMediaDocument(
+                    media=file_id,
+                    caption=caption if i == 0  else None
+                )
+            )
+
+        if bot:
+            await bot.send_media_group(chat_id, media_documents)
+        else:
+            await message.answer_media_group(media_documents)
+
 def form_list_to_append(id_tg, data):
     result = []
     result.append(data.get('start_date'))

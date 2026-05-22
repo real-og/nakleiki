@@ -184,10 +184,14 @@ async def handle_photo(message: types.Message, state: FSMContext):
     async with USER_PHOTO_LOCKS[user_id]:
         data = await state.get_data()
         photos_passport = data.get('photos_passport', [])
+        photos_passport_pic = data.get('photos_passport_pic', [])
+        photos_passport_doc = data.get('photos_passport_doc', [])
         if message.photo or message.document:
 
             if message.photo:
                 photo = message.photo[-1]
+                file_id = message.photo[-1].file_id
+                photos_passport_pic.append(file_id)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
                 await photo.download(destination_file=str(path))
@@ -197,6 +201,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 if not doc.mime_type or not doc.mime_type.startswith("image/"):
                     await message.answer(texts.error_photo)
                     return
+                file_id = message.document.file_id
+                photos_passport_doc.append(file_id)
                 ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
                 filename = f"{uuid.uuid4().hex}{ext}"
                 path = 'photos/' + filename
@@ -205,6 +211,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
             photos_passport.append(filename)
             photos_count = len(photos_passport)
             await state.update_data(photos_passport=photos_passport)
+            await state.update_data(photos_passport_doc=photos_passport_doc)
+            await state.update_data(photos_passport_pic=photos_passport_pic)
 
             if photos_count <= MIN_PASSPORT_PHOTOS:
                 await message.answer(f"Принято {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
@@ -236,10 +244,14 @@ async def handle_photo(message: types.Message, state: FSMContext):
     async with USER_PHOTO_LOCKS[user_id]:
         data = await state.get_data()
         photos_before = data.get('photos_before', [])
+        photos_before_pic = data.get('photos_before_pic', [])
+        photos_before_doc = data.get('photos_before_doc', [])
         if message.photo or message.document:
 
             if message.photo:
                 photo = message.photo[-1]
+                file_id = message.photo[-1].file_id
+                photos_before_pic.append(file_id)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
                 await photo.download(destination_file=str(path))
@@ -249,6 +261,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 if not doc.mime_type or not doc.mime_type.startswith("image/"):
                     await message.answer(texts.error_photo)
                     return
+                file_id = message.document.file_id
+                photos_before_doc.append(file_id)
                 ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
                 filename = f"{uuid.uuid4().hex}{ext}"
                 path = 'photos/' + filename
@@ -257,6 +271,8 @@ async def handle_photo(message: types.Message, state: FSMContext):
             photos_before.append(filename)
             photos_count = len(photos_before)
             await state.update_data(photos_before=photos_before)
+            await state.update_data(photos_before_doc=photos_before_doc)
+            await state.update_data(photos_before_pic=photos_before_pic)
 
             if photos_count < MIN_BEFORE_PHOTOS:
                 await message.answer(f"Принято обязательное {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
