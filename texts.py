@@ -81,8 +81,6 @@ def generate_report(data):
         type_work = 'часть Демонтаж из Демонтаж-Монтаж'
     else:
         type_work = data.get('type_work')
-
-
         
     result = f"""Начало: <b>{data.get('start_date')}</b>
 Конец: <b>{data.get('end_date')}</b>
@@ -90,6 +88,7 @@ def generate_report(data):
 Номер исполнителя: <b>{data.get('worker_number')}</b>
 Город: <b>{data.get('city')}</b>
 Вид работ: <b>{type_work}</b>
+Подвид работ: <b>{data.get('subtype_work')}</b>
 Сюжет: <b>{data.get('narrative')}</b>
 Вид транспорта: <b>{data.get('type_transport')}</b>
 Номер машины: <b>{data.get('transport_number')}</b>{representative_row}
@@ -136,3 +135,5 @@ enter_coworker_demontage = "Выберите из списка работник�
 enter_finish_demontage = """Сверьте результат, <b>отправьте</b> информацию по <b>демонтажу</b> и приступайте к монтажу.
 Также можете использовать кнопку сбросить чтобы удалить данные по этой работе и вернуться в начало"""
 bad_plate = 'Неверный формат'
+
+enter_sub_type_work = 'Введите подвид работы'

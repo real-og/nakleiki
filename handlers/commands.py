@@ -33,14 +33,4 @@ async def send_welcome(message: types.Message, state: FSMContext):
 
 @dp.message_handler(commands=['help'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
-    print(message)
     await message.answer(texts.help_message)
-
-
-# @dp.message_handler(content_types=['any'], state="*")
-# async def send_welcome(message: types.Message, state: FSMContext):
-#     print(message)
-
-    
-
-

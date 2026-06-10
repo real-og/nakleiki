@@ -22,6 +22,56 @@ MIN_AFTER_PHOTOS = 4
 
 USER_PHOTO_LOCKS = defaultdict(asyncio.Lock)
 
+CALLBACK_TEXT = {
+    # тип транспорта
+    "route_taxi": buttons.route_taxi,
+    "taxi": buttons.taxi,
+    "public_transport": buttons.public_transport,
+    "commercial": buttons.commercial,
+    "a1": buttons.a1,
+
+    # тип работы
+    "montage": buttons.montage,
+    "demontage": buttons.demontage,
+    "repair": buttons.repair,
+
+    # такси монтаж
+    "taxi_montage_1": buttons.taxi_montage_1,
+    "taxi_montage_2": buttons.taxi_montage_2,
+    "taxi_montage_3": buttons.taxi_montage_3,
+    "taxi_montage_4": buttons.taxi_montage_4,
+    "taxi_montage_5": buttons.taxi_montage_5,
+    "taxi_montage_6": buttons.taxi_montage_6,
+
+    # такси демонтаж
+    "taxi_demontage_1": buttons.taxi_demontage_1,
+    "taxi_demontage_2": buttons.taxi_demontage_2,
+    "taxi_demontage_3": buttons.taxi_demontage_3,
+    "taxi_demontage_4": buttons.taxi_demontage_4,
+
+    # маршрутки монтаж
+    "route_montage_1": buttons.route_montage_1,
+    "route_montage_2": buttons.route_montage_2,
+
+    # маршрутки демонтаж
+    "route_demontage_1": buttons.route_demontage_1,
+    "route_demontage_2": buttons.route_demontage_2,
+    "route_demontage_3": buttons.route_demontage_3,
+
+    # общественный транспорт монтаж
+    "bus_montage_1": buttons.bus_montage_1,
+    "bus_montage_2": buttons.bus_montage_2,
+    "bus_montage_3": buttons.bus_montage_3,
+
+    # общественный транспорт демонтаж
+    "bus_demontage_1": buttons.bus_demontage_1,
+    "bus_demontage_2": buttons.bus_demontage_2,
+    "bus_demontage_3": buttons.bus_demontage_3,
+    "bus_demontage_4": buttons.bus_demontage_4,
+    "bus_demontage_5": buttons.bus_demontage_5,
+    "bus_demontage_6": buttons.bus_demontage_6,
+}
+
 
 
 @dp.message_handler(state=State.entering_begin)
@@ -32,10 +82,11 @@ async def send_welcome(message: types.Message, state: FSMContext):
         return
     
     await state.finish()
-    recommendation_city = await sheets.get_city_recommendation()
+
     await message.answer(texts.begin_tapped, reply_markup=ReplyKeyboardRemove())
-    await message.answer(texts.enter_your_city, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
+    await message.answer(texts.enter_your_city, reply_markup=kb.city_kb)
     await State.entering_your_city.set()
+    # опасно
     user = await sheets.get_user(message.from_user.id)
     await state.update_data(worker_number=user[2])
     await state.update_data(worker_name=user[3])
@@ -45,75 +96,16 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.message_handler(state=State.entering_your_city)
 async def send_welcome(message: types.Message, state: FSMContext):
     city = message.text
-    recommendation_type_work = await sheets.get_type_work_recommendation()
-    await message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
-    await State.entering_type_work.set()
+    await message.answer(texts.enter_type_transport, reply_markup=kb.type_transport_kb)
+    await State.entering_type_transport.set()
     await state.update_data(city=city)
-
-    
 
 @dp.callback_query_handler(state=State.entering_your_city)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     city = callback.data
-    recommendation_type_work = await sheets.get_type_work_recommendation()
-    await callback.message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
-    await State.entering_type_work.set()
+    await callback.message.answer(texts.enter_type_transport, reply_markup=kb.type_transport_kb)
+    await State.entering_type_transport.set()
     await state.update_data(city=city)
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
-
-
-@dp.message_handler(state=State.entering_type_work)
-async def send_welcome(message: types.Message, state: FSMContext):
-    type_work = message.text
-    recommendation_narrative = await sheets.get_narrative_recommendation()
-    text_to_answer = texts.enter_narrative
-    if type_work == 'Демонтаж-Монтаж':
-        text_to_answer += '<b> демонтажа</b>'
-    await message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
-    await State.entering_narrative.set()
-    await state.update_data(type_work=type_work)
-
-@dp.callback_query_handler(state=State.entering_type_work)
-async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
-    type_work = callback.data
-    recommendation_narrative = await sheets.get_narrative_recommendation()
-    text_to_answer = texts.enter_narrative
-    if type_work == 'Демонтаж-Монтаж':
-        text_to_answer += '<b> демонтажа</b>'
-    await callback.message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
-    await State.entering_narrative.set()
-    await state.update_data(type_work=type_work)
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
-
-
-@dp.message_handler(state=State.entering_narrative)
-async def send_welcome(message: types.Message, state: FSMContext):
-    narrative = message.text
-    data = await state.get_data()
-    if data.get('is_combo'):
-        await message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
-        await State.working_on.set()
-        await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-    else:
-        recommendation_type_transport = await sheets.get_type_transport_recommendation()
-        await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
-        await State.entering_type_transport.set()
-    await state.update_data(narrative=narrative)
-
-@dp.callback_query_handler(state=State.entering_narrative)
-async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
-    narrative = callback.data
-    data = await state.get_data()
-    if data.get('is_combo'):
-        await callback.message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
-        await State.working_on.set()
-    else:
-        recommendation_type_transport = await sheets.get_type_transport_recommendation()
-        await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
-        await State.entering_type_transport.set()
-    await state.update_data(narrative=narrative)
     await callback.answer()
     await callback.message.edit_reply_markup(reply_markup=None)
 
@@ -121,18 +113,244 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_type_transport)
 async def send_welcome(message: types.Message, state: FSMContext):
     type_transport = message.text
-    await message.answer(texts.enter_transport_number)
-    await State.entering_transport_number.set()
+    await message.answer(texts.enter_type_work, reply_markup=kb.work_type_kb)
+    await State.entering_type_work.set()
     await state.update_data(type_transport=type_transport)
 
 @dp.callback_query_handler(state=State.entering_type_transport)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
-    type_transport = callback.data
-    await state.update_data(type_transport=type_transport)
+    type_transport_text = CALLBACK_TEXT.get(callback.data)
+    await state.update_data(type_transport=type_transport_text)
+    await callback.message.answer(texts.enter_type_work, reply_markup=kb.work_type_kb)
+    await State.entering_type_work.set()
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
+
+
+@dp.message_handler(state=State.entering_type_work)
+async def send_welcome(message: types.Message, state: FSMContext):
+    type_work = message.text
+    await state.update_data(type_work=type_work)
+
+    data = await state.get_data()
+    type_transport = data.get('type_transport')
+
+    if type_work == buttons.montage and type_transport == buttons.taxi:
+        await message.answer(texts.enter_sub_type_work, reply_markup=kb.taxi_montage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.demontage and type_transport == buttons.taxi:
+        await message.answer(texts.enter_sub_type_work, reply_markup=kb.taxi_demontage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.montage and type_transport == buttons.route_taxi:
+        await message.answer(texts.enter_sub_type_work, reply_markup=kb.route_montage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.demontage and type_transport == buttons.route_taxi:
+        await message.answer(texts.enter_sub_type_work, reply_markup=kb.route_demontage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.montage and type_transport == buttons.public_transport:
+        await message.answer(texts.enter_sub_type_work, reply_markup=kb.bus_montage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.demontage and type_transport == buttons.public_transport:
+        await message.answer(texts.enter_sub_type_work, reply_markup=kb.bus_demontage_kb)
+        await State.entering_sub_type_work.set()
+    
+    else:
+        recommendation_narrative = await sheets.get_narrative_recommendation()
+        await message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+        await State.entering_narrative.set()
+
+@dp.callback_query_handler(state=State.entering_type_work)
+async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+    type_work = CALLBACK_TEXT.get(callback.data)
+    # type_work_text = CALLBACK_TEXT.get(type_work)
+    await state.update_data(type_work=type_work)
+
+    data = await state.get_data()
+    type_transport = data.get('type_transport')
+
+    if type_work == buttons.montage and type_transport == buttons.taxi:
+        await callback.message.answer(texts.enter_sub_type_work, reply_markup=kb.taxi_montage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.demontage and type_transport == buttons.taxi:
+        await callback.message.answer(texts.enter_sub_type_work, reply_markup=kb.taxi_demontage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.montage and type_transport == buttons.route_taxi:
+        await callback.message.answer(texts.enter_sub_type_work, reply_markup=kb.route_montage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.demontage and type_transport == buttons.route_taxi:
+        await callback.message.answer(texts.enter_sub_type_work, reply_markup=kb.route_demontage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.montage and type_transport == buttons.public_transport:
+        await callback.message.answer(texts.enter_sub_type_work, reply_markup=kb.bus_montage_kb)
+        await State.entering_sub_type_work.set()
+    elif type_work == buttons.demontage and type_transport == buttons.public_transport:
+        await callback.message.answer(texts.enter_sub_type_work, reply_markup=kb.bus_demontage_kb)
+        await State.entering_sub_type_work.set()
+    
+    else:
+        recommendation_narrative = await sheets.get_narrative_recommendation()
+        await callback.message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+        await State.entering_narrative.set()    
+
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
+
+
+@dp.message_handler(state=State.entering_sub_type_work)
+async def send_welcome(message: types.Message, state: FSMContext):
+    subtype_work = message.text
+    await state.update_data(subtype_work=subtype_work)
+    recommendation_narrative = await sheets.get_narrative_recommendation()
+    await message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+    await State.entering_narrative.set()
+
+@dp.callback_query_handler(state=State.entering_sub_type_work)
+async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+    subtype_work_text = CALLBACK_TEXT.get(callback.data)
+    await state.update_data(subtype_work=subtype_work_text)
+    recommendation_narrative = await sheets.get_narrative_recommendation()
+    await callback.message.answer(texts.enter_narrative, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+    await State.entering_narrative.set() 
+    await callback.answer()
+    await callback.message.edit_reply_markup(reply_markup=None)
+
+
+@dp.message_handler(state=State.entering_narrative)
+async def send_welcome(message: types.Message, state: FSMContext):
+    narrative = message.text
+    await state.update_data(narrative=narrative)
+    await message.answer(texts.enter_transport_number)
+    await State.entering_transport_number.set()
+
+@dp.callback_query_handler(state=State.entering_narrative)
+async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+    narrative = callback.data
+    await state.update_data(narrative=narrative)
     await callback.message.answer(texts.enter_transport_number)
     await State.entering_transport_number.set()
     await callback.answer()
     await callback.message.edit_reply_markup(reply_markup=None)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# @dp.message_handler(state=State.entering_type_work)
+# async def send_welcome(message: types.Message, state: FSMContext):
+#     type_work = message.text
+#     recommendation_narrative = await sheets.get_narrative_recommendation()
+#     text_to_answer = texts.enter_narrative
+#     if type_work == 'Демонтаж-Монтаж':
+#         text_to_answer += '<b> демонтажа</b>'
+#     await message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+#     await State.entering_narrative.set()
+#     await state.update_data(type_work=type_work)
+
+# @dp.callback_query_handler(state=State.entering_type_work)
+# async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+#     type_work = callback.data
+#     recommendation_narrative = await sheets.get_narrative_recommendation()
+#     text_to_answer = texts.enter_narrative
+#     if type_work == 'Демонтаж-Монтаж':
+#         text_to_answer += '<b> демонтажа</b>'
+#     await callback.message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+#     await State.entering_narrative.set()
+#     await state.update_data(type_work=type_work)
+#     await callback.answer()
+#     await callback.message.edit_reply_markup(reply_markup=None)
+
+
+# @dp.message_handler(state=State.entering_narrative)
+# async def send_welcome(message: types.Message, state: FSMContext):
+#     narrative = message.text
+#     data = await state.get_data()
+#     if data.get('is_combo'):
+#         await message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
+#         await State.working_on.set()
+#         await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
+#     else:
+#         recommendation_type_transport = await sheets.get_type_transport_recommendation()
+#         await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
+#         await State.entering_type_transport.set()
+#     await state.update_data(narrative=narrative)
+
+# @dp.callback_query_handler(state=State.entering_narrative)
+# async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+#     narrative = callback.data
+#     data = await state.get_data()
+#     if data.get('is_combo'):
+#         await callback.message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
+#         await State.working_on.set()
+#     else:
+#         recommendation_type_transport = await sheets.get_type_transport_recommendation()
+#         await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
+#         await State.entering_type_transport.set()
+#     await state.update_data(narrative=narrative)
+#     await callback.answer()
+#     await callback.message.edit_reply_markup(reply_markup=None)
+
+
+# @dp.message_handler(state=State.entering_type_transport)
+# async def send_welcome(message: types.Message, state: FSMContext):
+#     type_transport = message.text
+#     await message.answer(texts.enter_transport_number)
+#     await State.entering_transport_number.set()
+#     await state.update_data(type_transport=type_transport)
+
+# @dp.callback_query_handler(state=State.entering_type_transport)
+# async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
+#     type_transport = callback.data
+#     await state.update_data(type_transport=type_transport)
+#     await callback.message.answer(texts.enter_transport_number)
+#     await State.entering_transport_number.set()
+#     await callback.answer()
+#     await callback.message.edit_reply_markup(reply_markup=None)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -92,6 +92,7 @@ def form_list_to_append(id_tg, data):
         result.append('Демонтаж')
     else:
         result.append(data.get('type_work'))
+    result.append(data.get('subtype_work'))
     result.append(data.get('narrative'))
     result.append(data.get('type_transport'))
     result.append(data.get('transport_number'))

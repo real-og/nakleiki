@@ -7,6 +7,7 @@ class State(StatesGroup):
     entering_begin = State()
 
     entering_your_city = State()
+    entering_sub_type_work = State()
     entering_type_work = State()
     entering_narrative = State()
     entering_type_transport = State()
