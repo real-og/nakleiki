@@ -40,11 +40,12 @@ async def send_files_by_ids_album(
     document_file_ids: list[str] = None,
     caption: str = "",
     bot=None,
+    chat_id=None
 ):
     photo_file_ids = photo_file_ids or []
     document_file_ids = document_file_ids or []
-
-    chat_id = config_io.get_value("CHAT_ID")
+    if chat_id is None:
+        chat_id = config_io.get_value("CHAT_ID")
 
     # 1. Сначала отправляем фото, если они есть
     if photo_file_ids:
@@ -109,6 +110,24 @@ def form_list_to_append(id_tg, data):
         for i in range(len(data.get('teammates'))):
             result.append(data.get('teammates')[i])
             result.append(data.get('teammates_percent')[i])
+    return result
+
+
+def form_list_to_append_tracking(id_tg, data):
+    result = []
+
+    result.append(data.get('start_date'))
+    result.append(data.get('end_date'))
+    result.append(id_tg)
+    result.append(data.get('worker_number'))
+    result.append(data.get('worker_name'))
+    result.append(data.get('city'))
+    result.append(data.get('type_work'))
+    result.append(data.get('transport_number'))
+    result.append(data.get('tracker_number'))
+    result.append(len(data.get('photos_after_tracking', [])))
+    result.append(data.get('comment'))
+
     return result
 
 

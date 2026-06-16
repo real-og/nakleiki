@@ -8,6 +8,7 @@ link = config_io.get_value('SHEET_LINK')
 WORKSHEET_BUFFER = 0
 WORKSHEET_CONFIG = 1
 WORKSHEET_WORK_NOTES = 2
+WORKSHEET_TRACKERS_NOTES = 3
 
 def get_creds():
     creds = Credentials.from_service_account_file("key_mtrans.json")
@@ -94,6 +95,10 @@ async def get_type_transport_recommendation():
     if len(result):
         return result
     return None
+
+async def append_row_to_trackers_notes(row_data):
+    sheet = await get_sheet(worksheet_number=WORKSHEET_TRACKERS_NOTES)
+    await sheet.append_row(row_data)
 
 
 async def append_row_to_work_notes(row_data):

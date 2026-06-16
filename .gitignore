@@ -11,3 +11,4 @@ config_dev.json
 config_prod.json
 readme_private.txt
 nohup.out
+config_local.json

@@ -125,6 +125,10 @@ work_type_kb.add(InlineKeyboardButton(text=buttons.montage, callback_data='monta
 work_type_kb.add(InlineKeyboardButton(text=buttons.demontage, callback_data='demontage'))
 work_type_kb.add(InlineKeyboardButton(text=buttons.repair, callback_data='repair'))
 
+work_type_tracking_kb = InlineKeyboardMarkup()
+work_type_tracking_kb.add(InlineKeyboardButton(text=buttons.montage, callback_data='montage'))
+work_type_tracking_kb.add(InlineKeyboardButton(text=buttons.demontage, callback_data='demontage'))
+
 taxi_montage_kb = InlineKeyboardMarkup()
 taxi_montage_kb.add(InlineKeyboardButton(text=buttons.taxi_montage_1, callback_data='taxi_montage_1'))
 taxi_montage_kb.add(InlineKeyboardButton(text=buttons.taxi_montage_2, callback_data='taxi_montage_2'))

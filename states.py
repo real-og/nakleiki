@@ -26,3 +26,11 @@ class State(StatesGroup):
     entering_percent_coworker = State()
     last_check = State()
 
+    entering_city_tracking = State()
+    entering_type_work_tracking = State()
+    entering_transport_number_tracking = State()
+    entering_tracker_number_tracking = State()
+    entering_photos_after_tracking = State()
+    entering_comment_tracking = State()
+    last_check_tracking = State()
+
