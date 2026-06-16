@@ -12,3 +12,5 @@ config_prod.json
 readme_private.txt
 nohup.out
 config_local.json
+sample.xlsx
+excel_files

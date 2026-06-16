@@ -63,4 +63,6 @@ async def start_tracking(message: types.Message, state: FSMContext):
 @dp.message_handler(commands=['help'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.help_message)
+    data = await sheets.get_all_values(3)
+    print(data[1:])
 
