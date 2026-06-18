@@ -2,6 +2,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from datetime import datetime
 import texts
+import texts_chehly
 from aiogram.types import ReplyKeyboardRemove
 import texts_tracking
 import sheets
@@ -60,9 +61,46 @@ async def start_tracking(message: types.Message, state: FSMContext):
     await state.update_data(worker_name=user[3])
 
 
+
+@dp.message_handler(commands=["start_chehly"], state="*")
+async def start_tracking(message: types.Message, state: FSMContext):
+    await message.answer(texts_chehly.start_message, reply_markup=ReplyKeyboardRemove())
+    await state.finish()
+
+    user = await sheets.get_user(message.from_user.id)
+
+    if (user is None) or (not user[2]):
+        await message.answer(texts.reg_number)
+        await State.reg_number.set()
+        if user is None:
+            await sheets.append_row_to_buffer([message.from_user.id, message.from_user.username])
+        return
+    
+    if not user[3]:
+        await message.answer(texts.reg_name)
+        await State.reg_name.set()
+        return
+
+    tasks = await sheets.get_all_values(4)
+    active_tasks = []
+
+    for task in tasks[1:]:
+        if task[20] != 'completed':
+            task.append([])
+            task.append([])
+            active_tasks.append(task)
+
+    await state.update_data(active_tasks=active_tasks)
+
+    await message.answer(texts_chehly.active_tasks, reply_markup=kb.get_active_tasks_kb(active_tasks))
+    await State.entering_active_task.set()
+
+    await state.update_data(worker_number=user[2])
+    await state.update_data(worker_name=user[3])
+
+
 @dp.message_handler(commands=['help'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.help_message)
-    data = await sheets.get_all_values(3)
-    print(data[1:])
+    print(message)
 

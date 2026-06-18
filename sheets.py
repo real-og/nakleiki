@@ -9,6 +9,7 @@ WORKSHEET_BUFFER = 0
 WORKSHEET_CONFIG = 1
 WORKSHEET_WORK_NOTES = 2
 WORKSHEET_TRACKERS_NOTES = 3
+WORKSHEET_TASKS_CHEHLY = 4
 
 def get_creds():
     creds = Credentials.from_service_account_file("key_mtrans.json")
@@ -122,7 +123,57 @@ async def update_cell_buffer(id_tg, column_to_update, value):
             return True
 
     return False
-    
-    
-    
 
+
+
+async def replace_task_row_by_key(new_row, key_index=5, color=None):
+    """
+    new_row — новый массив строки
+    key_index — по какому элементу массива искать строку
+
+    key_index=5 значит ищем по new_row[5]
+    В твоей структуре это Номер авто.
+    """
+
+    sheet = await get_sheet(worksheet_number=WORKSHEET_TASKS_CHEHLY)
+    all_values = await sheet.get_all_values()
+
+    if key_index >= len(new_row):
+        return False
+
+    key_value = str(new_row[key_index]).strip()
+
+    if not key_value:
+        return False
+
+    # В твоей таблице 20 колонок: A:T
+    columns_count = 21
+
+    new_row = new_row[:columns_count]
+    new_row = new_row + [""] * (columns_count - len(new_row))
+
+    for row_number, row in enumerate(all_values[1:], start=2):
+        if key_index < len(row) and str(row[key_index]).strip() == key_value:
+            range_name = f"A{row_number}:U{row_number}"
+
+            await sheet.batch_update([
+                {
+                    "range": range_name,
+                    "values": [new_row]
+                }
+            ])
+
+            if color is None:
+                color = {
+                    "red": 0.85,
+                    "green": 1.0,
+                    "blue": 0.85
+                }
+
+            await sheet.format(range_name, {
+                "backgroundColor": color
+            })
+
+            return row_number
+
+    return False

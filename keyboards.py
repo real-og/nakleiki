@@ -166,4 +166,15 @@ bus_demontage_kb.add(InlineKeyboardButton(text=buttons.bus_demontage_5, callback
 bus_demontage_kb.add(InlineKeyboardButton(text=buttons.bus_demontage_6, callback_data='bus_demontage_6'))
 
 
+def get_active_tasks_kb(active_tasks):
+    kb = InlineKeyboardMarkup()
+    for task in active_tasks:
+        text = task[9] + ' ' + task[5]
+        kb.add(InlineKeyboardButton(text=text, callback_data=task[5]))
+    return kb
+
+chehly_task_kb = ReplyKeyboardMarkup([[buttons.finish_chehly, buttons.tasks_chehly]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
+
 

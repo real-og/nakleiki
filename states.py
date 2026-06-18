@@ -34,3 +34,6 @@ class State(StatesGroup):
     entering_comment_tracking = State()
     last_check_tracking = State()
 
+    entering_active_task = State()
+    opened_task = State()
+
