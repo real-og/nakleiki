@@ -9,3 +9,8 @@ key_mtrans.json
 __pycache__
 config_dev.json
 config_prod.json
+config_local.json
+nohup.out
+readme_private.txt
+sample.xlsx
+photos_chehly

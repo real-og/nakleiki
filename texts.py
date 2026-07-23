@@ -1,4 +1,5 @@
 import buttons
+import side_logic
 
 start_message = """Бот создан для автоматического трекинга работ по оклейке/ремонту/демонтажу автотранспорта.
 Следуйте инструкциям ниже, чтобы отметить свою работу.
@@ -105,6 +106,7 @@ def generate_report(data):
         for i in range(len(data.get('teammates'))):
             result += f"""Помощник <b>{data.get('teammates')[i]}</b>
 Выполнил <b>{data.get('teammates_percent')[i]}</b> процентов\n"""
+    result += f'\n\nКлючевое слово: {side_logic.get_car_keyword(data.get("transport_number"))}'
             
     return result
 

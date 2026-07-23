@@ -186,6 +186,12 @@ def normalize_belarus_plate(value: str):
         return plate
 
     return None
+
+
+def get_car_keyword(car_number: str) -> str | None:
+    """Возвращает первые 3 или 4 цифры из номера машины."""
+    match = re.search(r'\d{3,4}', car_number)
+    return match.group() if match else None
     
     
 
