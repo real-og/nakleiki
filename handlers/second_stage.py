@@ -46,6 +46,11 @@ async def handle_photo(message: types.Message, state: FSMContext):
         photos_after = data.get('photos_after', [])
         photos_after_pic = data.get('photos_after_pic', [])
         photos_after_doc = data.get('photos_after_doc', [])
+        type_transport = data.get('type_transport')
+        if type_transport == 'Автобус(задняя)':
+            LOCAL_MIN_AFTER_PHOTOS = 1
+        else:
+            LOCAL_MIN_AFTER_PHOTOS = MIN_AFTER_PHOTOS
         if message.photo or message.document:
 
             if message.photo:
@@ -73,17 +78,17 @@ async def handle_photo(message: types.Message, state: FSMContext):
             await state.update_data(photos_after=photos_after)
             await state.update_data(photos_after_doc=photos_after_doc)
             await state.update_data(photos_after_pic=photos_after_pic)
-            if photos_count <= MIN_AFTER_PHOTOS:
-                await message.answer(f"Принято {photos_count}/{MIN_AFTER_PHOTOS} фото.")
-            if photos_count == MIN_AFTER_PHOTOS:
+            if photos_count <= LOCAL_MIN_AFTER_PHOTOS:
+                await message.answer(f"Принято {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.")
+            if photos_count == LOCAL_MIN_AFTER_PHOTOS:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
                     await message.answer(texts.enter_comment_demontage, reply_markup=kb.skip_comment_kb)
                 else:
                     await message.answer(texts.enter_comment, reply_markup=kb.skip_comment_kb)
                 await State.entering_comment.set()
                 await state.update_data(end_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
-            if photos_count > MIN_AFTER_PHOTOS:
-                await message.answer(f"Принято дополнительное {photos_count}/{MIN_AFTER_PHOTOS} фото.")
+            if photos_count > LOCAL_MIN_AFTER_PHOTOS:
+                await message.answer(f"Принято дополнительное {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.")
         else:
             await message.answer(texts.error_photo)
 

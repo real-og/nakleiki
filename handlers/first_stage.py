@@ -246,6 +246,12 @@ async def handle_photo(message: types.Message, state: FSMContext):
         photos_before = data.get('photos_before', [])
         photos_before_pic = data.get('photos_before_pic', [])
         photos_before_doc = data.get('photos_before_doc', [])
+        type_transport = data.get('type_transport')
+        if type_transport == 'Автобус(задняя)':
+            LOCAL_MIN_BEFORE_PHOTOS = 1
+        else:
+            LOCAL_MIN_BEFORE_PHOTOS = MIN_BEFORE_PHOTOS
+
         if message.photo or message.document:
 
             if message.photo:
@@ -274,16 +280,16 @@ async def handle_photo(message: types.Message, state: FSMContext):
             await state.update_data(photos_before_doc=photos_before_doc)
             await state.update_data(photos_before_pic=photos_before_pic)
 
-            if photos_count < MIN_BEFORE_PHOTOS:
-                await message.answer(f"Принято обязательное {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
-            if photos_count == MIN_BEFORE_PHOTOS:
+            if photos_count < LOCAL_MIN_BEFORE_PHOTOS:
+                await message.answer(f"Принято обязательное {photos_count}/{LOCAL_MIN_BEFORE_PHOTOS} фото.")
+            if photos_count == LOCAL_MIN_BEFORE_PHOTOS:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
                     await message.answer(texts.go_to_demontage, reply_markup=kb.completed_work_kb)
                 else:
                     await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
                 await State.working_on.set()
-            if photos_count > MIN_BEFORE_PHOTOS:
-                await message.answer(f"Принято дополнительное {photos_count}/{MIN_BEFORE_PHOTOS} фото.")
+            if photos_count > LOCAL_MIN_BEFORE_PHOTOS:
+                await message.answer(f"Принято дополнительное {photos_count}/{LOCAL_MIN_BEFORE_PHOTOS} фото.")
 
         else:
             await message.answer(texts.error_photo)
