@@ -8,6 +8,8 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
+
+import navigation
 import constants
 import sheets
 import texts
@@ -39,6 +41,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
             text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_after
             await safe_answer(message, text, reply_markup=kb.back_kb)
         await State.entering_photos_after.set()
+        await navigation.push_state(state, State.entering_photos_after.state)
         await state.update_data(is_completed=message.text)
     else:
         await safe_answer(message, texts.use_buttons, reply_markup=kb.back_kb)
@@ -93,6 +96,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 else:
                     await safe_answer(message, texts.enter_comment, reply_markup=kb.skip_comment_kb)
                 await State.entering_comment.set()
+                await navigation.push_state(state, State.entering_comment.state)
                 await state.update_data(end_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             if photos_count > LOCAL_MIN_AFTER_PHOTOS:
                 await safe_answer(message, f"Принято дополнительное {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.", reply_markup=kb.back_kb)
@@ -109,6 +113,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     else:
         await safe_answer(message, texts.enter_was_solo, reply_markup=kb.yes_no_kb)
     await State.entering_was_working_solo.set()
+    await navigation.push_state(state, State.entering_was_working_solo.state)
     await state.update_data(comment=comment)
 
 
@@ -132,10 +137,12 @@ async def send_welcome(message: types.Message, state: FSMContext):
                 await safe_answer(message, texts.enter_finish, reply_markup=kb.send_kb)
 
             await State.last_check.set()
+            await navigation.push_state(state, State.last_check.state)
 
         elif message.text == buttons.no:
             await safe_answer(message, texts.enter_your_percent, reply_markup=kb.get_percent_kb())
             await State.entering_my_percent.set()
+            await navigation.push_state(state, State.entering_my_percent.state)
         await state.update_data(working_solo=message.text)
     else:
         await safe_answer(message, texts.use_buttons, reply_markup=kb.yes_no_kb)
@@ -160,6 +167,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
             )
 
         await State.adding_coworker.set()
+        await navigation.push_state(state, State.adding_coworker.state)
         await state.update_data(solo_percent=solo_percent)
 
     else:
@@ -203,6 +211,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
         await safe_answer(callback.message, texts.enter_finish, reply_markup=kb.send_kb)
 
     await State.last_check.set()
+    await navigation.push_state(state, State.last_check.state)
     await safe_callback_answer(callback)
     await safe_edit_reply_markup(callback.message, reply_markup=None)
 
@@ -231,13 +240,16 @@ async def send_welcome(message: types.Message, state: FSMContext):
             await safe_answer(message, texts.result_saved_demontage, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
             await side_logic.remake_data_after_demontage(state)
             await State.entering_narrative.set()
+            await navigation.push_state(state, State.entering_narrative.state)
         else:
             await safe_answer(message, texts.result_saved, reply_markup=kb.begin_kb)
             await State.entering_begin.set()
+            await navigation.push_state(state, State.entering_begin.state)
     elif message.text == buttons.reset:
         await safe_answer(message, "Данные по этой работе сброшены")
         await state.finish()
         await State.entering_begin.set()
+        await navigation.push_state(state, State.entering_begin.state)
         await safe_answer(message, "Можете приступать к следующей работе. Нажимайте или вводите <b>Приступить</b>", reply_markup=kb.begin_kb)
     else:
         await safe_answer(message, texts.use_buttons, reply_markup=kb.send_kb)

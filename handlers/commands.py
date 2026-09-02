@@ -1,6 +1,7 @@
 from aiogram import types
 from aiogram.dispatcher import FSMContext
 
+import navigation
 import texts
 import sheets
 import keyboards as kb
@@ -19,6 +20,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     if (user is None) or (not user[2]):
         await safe_answer(message, texts.reg_number)
         await State.reg_number.set()
+        await navigation.push_state(state, State.reg_number.state)
         if user is None:
             await sheets.append_row_to_buffer([message.from_user.id, message.from_user.username])
         return
@@ -26,11 +28,13 @@ async def send_welcome(message: types.Message, state: FSMContext):
     if not user[3]:
         await safe_answer(message, texts.reg_name)
         await State.reg_name.set()
+        await navigation.push_state(state, State.reg_name.state)
         return
 
     await safe_answer(message, texts.enter_begin, reply_markup=kb.begin_kb)
     
     await State.entering_begin.set()
+    await navigation.push_state(state, State.entering_begin.state)
     # await State.entering_comment.set()
 
 

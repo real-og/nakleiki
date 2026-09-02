@@ -11,7 +11,6 @@ def get_city_recommendation_kb(cities):
     for city in cities:
         button = InlineKeyboardButton(text=city, callback_data=city)
         kb.add(button)
-    kb.add(buttons.back)
     return kb
 
 def get_type_work_recommendation_kb(type_work_variants):
@@ -21,7 +20,7 @@ def get_type_work_recommendation_kb(type_work_variants):
     for type_work in type_work_variants:
         button = InlineKeyboardButton(text=type_work, callback_data=type_work)
         kb.add(button)
-    kb.add(buttons.back)
+    kb.add(InlineKeyboardButton(text=buttons.back, callback_data='back'))
     return kb
 
 def get_narrative_recommendation_kb(narrative_variants):
@@ -39,7 +38,7 @@ def get_narrative_recommendation_kb(narrative_variants):
         for narrative in narrative_variants:
             button = InlineKeyboardButton(text=narrative, callback_data=narrative)
             kb.add(button)
-    kb.add(buttons.back)
+    kb.add(InlineKeyboardButton(text=buttons.back, callback_data='back'))
     return kb
 
 def get_type_transport_recommendation_kb(type_transport_variants):
@@ -49,7 +48,7 @@ def get_type_transport_recommendation_kb(type_transport_variants):
     for type_transport in type_transport_variants:
         button = InlineKeyboardButton(text=type_transport, callback_data=type_transport)
         kb.add(button)
-    kb.add(buttons.back)
+    kb.add(InlineKeyboardButton(text=buttons.back, callback_data='back'))
     return kb
 
 def get_users_to_select(users):
@@ -62,11 +61,11 @@ def get_users_to_select(users):
         user_compiled = name + ' ' + str(number)
         button = InlineKeyboardButton(text=user_compiled, callback_data=user_compiled)
         kb.add(button)
-    kb.add(buttons.back)
+    kb.add(InlineKeyboardButton(text=buttons.back, callback_data='back'))
     return kb
 
 
-begin_kb = ReplyKeyboardMarkup([[buttons.begin, buttons.back]],
+begin_kb = ReplyKeyboardMarkup([[buttons.begin]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
