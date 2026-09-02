@@ -10,28 +10,28 @@ import config_io
 PHOTO_DIR = Path("photos")
 
 
-async def send_photos_album(
-    message: types.Message,
-    photo_names: list[str],
-    caption: str = "",
-    bot = None
+# async def send_photos_album(
+#     message: types.Message,
+#     photo_names: list[str],
+#     caption: str = "",
+#     bot = None
 
-):
-    media = []
+# ):
+#     media = []
 
-    for i, name in enumerate(photo_names[:10]):
-        path = PHOTO_DIR / name
+#     for i, name in enumerate(photo_names[:10]):
+#         path = PHOTO_DIR / name
 
-        media.append(
-            types.InputMediaPhoto(
-                media=types.InputFile(str(path)),
-                caption=caption if i == 0 else None
-            )
-        )
-    if bot:
-        await bot.send_media_group(config_io.get_value('CHAT_ID'), media)
-    else:
-        await message.answer_media_group(media)
+#         media.append(
+#             types.InputMediaPhoto(
+#                 media=types.InputFile(str(path)),
+#                 caption=caption if i == 0 else None
+#             )
+#         )
+#     if bot:
+#         await bot.send_media_group(config_io.get_value('CHAT_ID'), media)
+#     else:
+#         await message.answer_media_group(media)
 
 
 async def send_files_by_ids_album(

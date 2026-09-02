@@ -8,6 +8,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
+import constants
 import sheets
 import side_logic
 import texts
@@ -17,45 +18,67 @@ from states import State
 from loader import dp
 
 MIN_PASSPORT_PHOTOS = 2
+
 MIN_BEFORE_PHOTOS = 4
 MIN_AFTER_PHOTOS = 4
 
+MIN_BEFORE_PHOTOS_BUS = 1
+MIN_AFTER_PHOTOS_BUS = 1
+
 USER_PHOTO_LOCKS = defaultdict(asyncio.Lock)
+
 
 
 
 @dp.message_handler(state=State.entering_begin)
 async def send_welcome(message: types.Message, state: FSMContext):
     user_input = message.text
-    if not(user_input == buttons.begin):
+
+    if user_input != buttons.begin:
         await message.answer(texts.use_buttons, reply_markup=kb.begin_kb)
         return
     
     await state.finish()
-    recommendation_city = await sheets.get_city_recommendation()
+
     await message.answer(texts.begin_tapped, reply_markup=ReplyKeyboardRemove())
-    await message.answer(texts.enter_your_city, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
+    try:
+        user = await sheets.get_user(message.from_user.id)
+        if not user:
+            await message.answer("Не удалось найти ваши данные. Попробуйте нажать /start ещё раз.")
+            return
+
+    except Exception as e:
+        print(f"Ошибка загрузки пользователя {message.from_user.id}: {e}")
+        await message.answer(
+            "Не удалось загрузить ваши данные. Попробуйте немного позже или нажмите /start."
+        )
+        return
+    
+    recommendation_city = constants.cities
+    
+    enter_city_text = f'Данные найдены, {user[3]}\n' + texts.enter_your_city
+    await message.answer(enter_city_text, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
+
     await State.entering_your_city.set()
-    user = await sheets.get_user(message.from_user.id)
+
     await state.update_data(worker_number=user[2])
     await state.update_data(worker_name=user[3])
     await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
 
 
+
 @dp.message_handler(state=State.entering_your_city)
 async def send_welcome(message: types.Message, state: FSMContext):
     city = message.text
-    recommendation_type_work = await sheets.get_type_work_recommendation()
+    recommendation_type_work = constants.type_work
     await message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
-
     
-
 @dp.callback_query_handler(state=State.entering_your_city)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     city = callback.data
-    recommendation_type_work = await sheets.get_type_work_recommendation()
+    recommendation_type_work = constants.type_work
     await callback.message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
@@ -66,7 +89,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(state=State.entering_type_work)
 async def send_welcome(message: types.Message, state: FSMContext):
     type_work = message.text
-    recommendation_narrative = await sheets.get_narrative_recommendation()
+    recommendation_narrative = constants.narrative
     text_to_answer = texts.enter_narrative
     if type_work == 'Демонтаж-Монтаж':
         text_to_answer += '<b> демонтажа</b>'
@@ -77,7 +100,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.callback_query_handler(state=State.entering_type_work)
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     type_work = callback.data
-    recommendation_narrative = await sheets.get_narrative_recommendation()
+    recommendation_narrative = constants.narrative
     text_to_answer = texts.enter_narrative
     if type_work == 'Демонтаж-Монтаж':
         text_to_answer += '<b> демонтажа</b>'
@@ -97,7 +120,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         await State.working_on.set()
         await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     else:
-        recommendation_type_transport = await sheets.get_type_transport_recommendation()
+        recommendation_type_transport = constants.type_transport
         await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
         await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
@@ -110,7 +133,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
         await callback.message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
         await State.working_on.set()
     else:
-        recommendation_type_transport = await sheets.get_type_transport_recommendation()
+        recommendation_type_transport = constants.type_transport
         await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
         await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
@@ -194,7 +217,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 photos_passport_pic.append(file_id)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
-                await photo.download(destination_file=str(path))
+                # await photo.download(destination_file=str(path))
 
             elif message.document:
                 doc = message.document
@@ -206,7 +229,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
                 filename = f"{uuid.uuid4().hex}{ext}"
                 path = 'photos/' + filename
-                await doc.download(destination_file=str(path))
+                # await doc.download(destination_file=str(path))
 
             photos_passport.append(filename)
             photos_count = len(photos_passport)
@@ -260,7 +283,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 photos_before_pic.append(file_id)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
-                await photo.download(destination_file=str(path))
+                # await photo.download(destination_file=str(path))
 
             elif message.document:
                 doc = message.document
@@ -272,7 +295,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
                 filename = f"{uuid.uuid4().hex}{ext}"
                 path = 'photos/' + filename
-                await doc.download(destination_file=str(path))
+                # await doc.download(destination_file=str(path))
 
             photos_before.append(filename)
             photos_count = len(photos_before)

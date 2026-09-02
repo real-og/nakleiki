@@ -8,6 +8,7 @@ from aiogram import types
 from aiogram.dispatcher import FSMContext
 from aiogram.types import ReplyKeyboardRemove
 
+import constants
 import sheets
 import texts
 import buttons
@@ -59,7 +60,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 photos_after_pic.append(file_id)
                 filename = f"{uuid.uuid4().hex}.jpg"
                 path = 'photos/' + filename
-                await photo.download(destination_file=str(path))
+                # await photo.download(destination_file=str(path))
 
             elif message.document:
                 doc = message.document
@@ -71,7 +72,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
                 ext = os.path.splitext(doc.file_name or "")[1] or ".jpg"
                 filename = f"{uuid.uuid4().hex}{ext}"
                 path = 'photos/' + filename
-                await doc.download(destination_file=str(path))
+                # await doc.download(destination_file=str(path))
 
             photos_after.append(filename)
             photos_count = len(photos_after)
@@ -220,7 +221,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         # side_logic.delete_files_from_folder(data.get('photos_before', []), 'photos')
         # side_logic.delete_files_from_folder(data.get('photos_after', []), 'photos')
         if data.get('type_work') == 'Демонтаж-Монтаж':
-            recommendation_narrative = await sheets.get_narrative_recommendation()
+            recommendation_narrative = constants.narrative
             await message.answer(texts.result_saved_demontage, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
             await side_logic.remake_data_after_demontage(state)
             await State.entering_narrative.set()

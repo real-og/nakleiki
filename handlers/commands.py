@@ -11,9 +11,10 @@ from loader import dp
 @dp.message_handler(commands=['start'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
     await message.answer(texts.start_message)
-    await state.finish()
-    user = await sheets.get_user(message.from_user.id)
 
+    await state.finish()
+
+    user = await sheets.get_user(message.from_user.id)
     if (user is None) or (not user[2]):
         await message.answer(texts.reg_number)
         await State.reg_number.set()
@@ -27,20 +28,11 @@ async def send_welcome(message: types.Message, state: FSMContext):
         return
 
     await message.answer(texts.enter_begin, reply_markup=kb.begin_kb)
+    
     await State.entering_begin.set()
     # await State.entering_comment.set()
 
 
 @dp.message_handler(commands=['help'], state="*")
 async def send_welcome(message: types.Message, state: FSMContext):
-    print(message)
     await message.answer(texts.help_message)
-
-
-# @dp.message_handler(content_types=['any'], state="*")
-# async def send_welcome(message: types.Message, state: FSMContext):
-#     print(message)
-
-    
-
-
