@@ -6,6 +6,7 @@ from aiogram import types
 from pathlib import Path
 import buttons
 import config_io
+from telegram_safe import safe_answer_media_group, safe_bot_send_media_group
 
 PHOTO_DIR = Path("photos")
 
@@ -59,9 +60,9 @@ async def send_files_by_ids_album(
             )
 
         if bot:
-            await bot.send_media_group(chat_id, media_photos)
+            await safe_bot_send_media_group(bot, chat_id, media_photos)
         else:
-            await message.answer_media_group(media_photos)
+            await safe_answer_media_group(message, media_photos)
 
     # 2. Потом отправляем документы, если они есть
     if document_file_ids:
@@ -76,9 +77,9 @@ async def send_files_by_ids_album(
             )
 
         if bot:
-            await bot.send_media_group(chat_id, media_documents)
+            await safe_bot_send_media_group(bot, chat_id, media_documents)
         else:
-            await message.answer_media_group(media_documents)
+            await safe_answer_media_group(message, media_documents)
 
 def form_list_to_append(id_tg, data):
     result = []

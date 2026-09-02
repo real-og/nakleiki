@@ -105,6 +105,14 @@ def safe_bot_send_message(bot, chat_id, text: str, **kwargs):
     return _telegram_call_with_retry(bot.send_message, chat_id, text, **kwargs)
 
 
+def safe_answer_media_group(message: types.Message, media, **kwargs):
+    return _telegram_call_with_retry(message.answer_media_group, media, **kwargs)
+
+
+def safe_bot_send_media_group(bot, chat_id, media, **kwargs):
+    return _telegram_call_with_retry(bot.send_media_group, chat_id, media, **kwargs)
+
+
 async def safe_callback_answer(callback: types.CallbackQuery, *args, **kwargs):
     try:
         return await _telegram_call_with_retry(callback.answer, *args, **kwargs)

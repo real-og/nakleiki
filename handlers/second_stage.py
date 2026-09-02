@@ -17,6 +17,12 @@ import config_io
 import keyboards as kb
 from states import State
 from loader import dp, bot
+from telegram_safe import (
+    safe_answer,
+    safe_bot_send_message,
+    safe_callback_answer,
+    safe_edit_reply_markup,
+)
 
 MIN_AFTER_PHOTOS = 4
 
@@ -28,14 +34,14 @@ async def send_welcome(message: types.Message, state: FSMContext):
     data = await state.get_data()
     if message.text in [buttons.completed, buttons.uncompleted]:
         if data.get('type_work') == 'Демонтаж-Монтаж':
-            await message.answer(texts.enter_photos_after_demontage, reply_markup=ReplyKeyboardRemove())
+            await safe_answer(message, texts.enter_photos_after_demontage, reply_markup=kb.back_kb)
         else:
             text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_after
-            await message.answer(text, reply_markup=ReplyKeyboardRemove())
+            await safe_answer(message, text, reply_markup=kb.back_kb)
         await State.entering_photos_after.set()
         await state.update_data(is_completed=message.text)
     else:
-        await message.answer(texts.use_buttons, reply_markup=kb.completed_work_kb)
+        await safe_answer(message, texts.use_buttons, reply_markup=kb.back_kb)
 
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_after)
@@ -65,7 +71,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
             elif message.document:
                 doc = message.document
                 if not doc.mime_type or not doc.mime_type.startswith("image/"):
-                    await message.answer(texts.error_photo)
+                    await safe_answer(message, texts.error_photo, reply_markup=kb.back_kb)
                     return
                 file_id = message.document.file_id
                 photos_after_doc.append(file_id)
@@ -80,18 +86,18 @@ async def handle_photo(message: types.Message, state: FSMContext):
             await state.update_data(photos_after_doc=photos_after_doc)
             await state.update_data(photos_after_pic=photos_after_pic)
             if photos_count <= LOCAL_MIN_AFTER_PHOTOS:
-                await message.answer(f"Принято {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.")
+                await safe_answer(message, f"Принято {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.", reply_markup=kb.back_kb)
             if photos_count == LOCAL_MIN_AFTER_PHOTOS:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
-                    await message.answer(texts.enter_comment_demontage, reply_markup=kb.skip_comment_kb)
+                    await safe_answer(message, texts.enter_comment_demontage, reply_markup=kb.skip_comment_kb)
                 else:
-                    await message.answer(texts.enter_comment, reply_markup=kb.skip_comment_kb)
+                    await safe_answer(message, texts.enter_comment, reply_markup=kb.skip_comment_kb)
                 await State.entering_comment.set()
                 await state.update_data(end_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
             if photos_count > LOCAL_MIN_AFTER_PHOTOS:
-                await message.answer(f"Принято дополнительное {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.")
+                await safe_answer(message, f"Принято дополнительное {photos_count}/{LOCAL_MIN_AFTER_PHOTOS} фото.", reply_markup=kb.back_kb)
         else:
-            await message.answer(texts.error_photo)
+            await safe_answer(message, texts.error_photo, reply_markup=kb.back_kb)
 
 
 @dp.message_handler(state=State.entering_comment)
@@ -99,9 +105,9 @@ async def send_welcome(message: types.Message, state: FSMContext):
     data = await state.get_data()
     comment = message.text
     if data.get('type_work') == 'Демонтаж-Монтаж':
-        await message.answer(texts.enter_was_solo_demontage, reply_markup=kb.yes_no_kb)
+        await safe_answer(message, texts.enter_was_solo_demontage, reply_markup=kb.yes_no_kb)
     else:
-        await message.answer(texts.enter_was_solo, reply_markup=kb.yes_no_kb)
+        await safe_answer(message, texts.enter_was_solo, reply_markup=kb.yes_no_kb)
     await State.entering_was_working_solo.set()
     await state.update_data(comment=comment)
 
@@ -112,7 +118,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
         if message.text == buttons.yes:
             data = await state.get_data()
             report = texts.generate_report(data)
-            await message.answer(report)
+            await safe_answer(message, report, reply_markup=kb.back_kb)
             if data.get('photos_passport'):
                 # await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
                 await side_logic.send_files_by_ids_album(message, data.get('photos_passport_pic'), data.get('photos_passport_doc'), texts.photos_passport)
@@ -121,18 +127,18 @@ async def send_welcome(message: types.Message, state: FSMContext):
             # await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
             # await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
             if data.get('type_work') == 'Демонтаж-Монтаж':
-                await message.answer(texts.enter_finish_demontage, reply_markup=kb.send_kb)
+                await safe_answer(message, texts.enter_finish_demontage, reply_markup=kb.send_kb)
             else:
-                await message.answer(texts.enter_finish, reply_markup=kb.send_kb)
+                await safe_answer(message, texts.enter_finish, reply_markup=kb.send_kb)
 
             await State.last_check.set()
 
         elif message.text == buttons.no:
-            await message.answer(texts.enter_your_percent, reply_markup=kb.get_percent_kb())
+            await safe_answer(message, texts.enter_your_percent, reply_markup=kb.get_percent_kb())
             await State.entering_my_percent.set()
         await state.update_data(working_solo=message.text)
     else:
-        await message.answer(texts.use_buttons, reply_markup=kb.yes_no_kb)
+        await safe_answer(message, texts.use_buttons, reply_markup=kb.yes_no_kb)
 
 
 @dp.callback_query_handler(state=State.entering_my_percent)
@@ -143,12 +149,12 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
         data = await state.get_data()
 
         if data.get('type_work') == 'Демонтаж-Монтаж':
-            await callback.message.answer(
+            await safe_answer(callback.message, 
                 texts.enter_coworker_demontage,
                 reply_markup=kb.get_users_to_select(users)
             )
         else:
-            await callback.message.answer(
+            await safe_answer(callback.message, 
                 texts.enter_coworker,
                 reply_markup=kb.get_users_to_select(users)
             )
@@ -157,9 +163,9 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
         await state.update_data(solo_percent=solo_percent)
 
     else:
-        await callback.message.answer(texts.bad_percent)
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
+        await safe_answer(callback.message, texts.bad_percent, reply_markup=kb.back_kb)
+    await safe_callback_answer(callback)
+    await safe_edit_reply_markup(callback.message, reply_markup=None)
 
 
 
@@ -171,7 +177,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
 
     solo_percent = int(data.get('solo_percent', 0))
     teammate_percent = 100 - int(solo_percent)
-    await callback.message.answer(texts.coworker_percent + f'<b>{teammate_percent}</b>')
+    await safe_answer(callback.message, texts.coworker_percent + f'<b>{teammate_percent}</b>', reply_markup=kb.back_kb)
 
     teammates = data.get('teammates', [])
     teammates_percent = data.get('teammates_percent', [])
@@ -183,7 +189,7 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
 
     report = texts.generate_report(data)
-    await callback.message.answer(report)
+    await safe_answer(callback.message, report, reply_markup=kb.back_kb)
     if data.get('photos_passport'):
                 # await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
         await side_logic.send_files_by_ids_album(callback.message, data.get('photos_passport_pic'), data.get('photos_passport_doc'), texts.photos_passport)
@@ -192,23 +198,23 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
             # await side_logic.send_photos_album(message, data.get('photos_before'),texts.photos_before)
             # await side_logic.send_photos_album(message, data.get('photos_after'),texts.photos_after)
     if data.get('type_work') == 'Демонтаж-Монтаж':
-        await callback.message.answer(texts.enter_finish_demontage, reply_markup=kb.send_kb)
+        await safe_answer(callback.message, texts.enter_finish_demontage, reply_markup=kb.send_kb)
     else:
-        await callback.message.answer(texts.enter_finish, reply_markup=kb.send_kb)
+        await safe_answer(callback.message, texts.enter_finish, reply_markup=kb.send_kb)
 
     await State.last_check.set()
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await safe_callback_answer(callback)
+    await safe_edit_reply_markup(callback.message, reply_markup=None)
 
 
 @dp.message_handler(state=State.last_check)
 async def send_welcome(message: types.Message, state: FSMContext):
     if message.text == buttons.send:
         data = await state.get_data()
-        await message.answer("Отправляем, немного подождите")
+        await safe_answer(message, "Отправляем, немного подождите")
 
         report = texts.generate_report(data)
-        await bot.send_message(config_io.get_value('CHAT_ID'), report)
+        await safe_bot_send_message(bot, config_io.get_value('CHAT_ID'), report)
         if data.get('photos_passport'):
                 # await side_logic.send_photos_album(message, data.get('photos_passport'),texts.photos_passport)
             await side_logic.send_files_by_ids_album(message, data.get('photos_passport_pic'), data.get('photos_passport_doc'), texts.photos_passport, bot)
@@ -222,18 +228,18 @@ async def send_welcome(message: types.Message, state: FSMContext):
         # side_logic.delete_files_from_folder(data.get('photos_after', []), 'photos')
         if data.get('type_work') == 'Демонтаж-Монтаж':
             recommendation_narrative = constants.narrative
-            await message.answer(texts.result_saved_demontage, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+            await safe_answer(message, texts.result_saved_demontage, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
             await side_logic.remake_data_after_demontage(state)
             await State.entering_narrative.set()
         else:
-            await message.answer(texts.result_saved, reply_markup=kb.begin_kb)
+            await safe_answer(message, texts.result_saved, reply_markup=kb.begin_kb)
             await State.entering_begin.set()
     elif message.text == buttons.reset:
-        await message.answer("Данные по этой работе сброшены")
+        await safe_answer(message, "Данные по этой работе сброшены")
         await state.finish()
         await State.entering_begin.set()
-        await message.answer("Можете приступать к следующей работе. Нажимайте или вводите <b>Приступить</b>", reply_markup=kb.begin_kb)
+        await safe_answer(message, "Можете приступать к следующей работе. Нажимайте или вводите <b>Приступить</b>", reply_markup=kb.begin_kb)
     else:
-        await message.answer(texts.use_buttons, reply_markup=kb.send_kb)
+        await safe_answer(message, texts.use_buttons, reply_markup=kb.send_kb)
 
 

@@ -16,6 +16,7 @@ import buttons
 import keyboards as kb
 from states import State
 from loader import dp
+from telegram_safe import safe_answer, safe_callback_answer, safe_edit_reply_markup
 
 MIN_PASSPORT_PHOTOS = 2
 
@@ -35,21 +36,21 @@ async def send_welcome(message: types.Message, state: FSMContext):
     user_input = message.text
 
     if user_input != buttons.begin:
-        await message.answer(texts.use_buttons, reply_markup=kb.begin_kb)
+        await safe_answer(message, texts.use_buttons, reply_markup=kb.begin_kb)
         return
     
     await state.finish()
 
-    await message.answer(texts.begin_tapped, reply_markup=ReplyKeyboardRemove())
+    await safe_answer(message, texts.begin_tapped, reply_markup=ReplyKeyboardRemove())
     try:
         user = await sheets.get_user(message.from_user.id)
         if not user:
-            await message.answer("Не удалось найти ваши данные. Попробуйте нажать /start ещё раз.")
+            await safe_answer(message, "Не удалось найти ваши данные. Попробуйте нажать /start ещё раз.")
             return
 
     except Exception as e:
         print(f"Ошибка загрузки пользователя {message.from_user.id}: {e}")
-        await message.answer(
+        await safe_answer(message, 
             "Не удалось загрузить ваши данные. Попробуйте немного позже или нажмите /start."
         )
         return
@@ -57,7 +58,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     recommendation_city = constants.cities
     
     enter_city_text = f'Данные найдены, {user[3]}\n' + texts.enter_your_city
-    await message.answer(enter_city_text, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
+    await safe_answer(message, enter_city_text, reply_markup=kb.get_city_recommendation_kb(recommendation_city))
 
     await State.entering_your_city.set()
 
@@ -71,7 +72,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
 async def send_welcome(message: types.Message, state: FSMContext):
     city = message.text
     recommendation_type_work = constants.type_work
-    await message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
+    await safe_answer(message, texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
     
@@ -79,11 +80,11 @@ async def send_welcome(message: types.Message, state: FSMContext):
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     city = callback.data
     recommendation_type_work = constants.type_work
-    await callback.message.answer(texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
+    await safe_answer(callback.message, texts.enter_type_work, reply_markup=kb.get_type_work_recommendation_kb(recommendation_type_work))
     await State.entering_type_work.set()
     await state.update_data(city=city)
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await safe_callback_answer(callback)
+    await safe_edit_reply_markup(callback.message, reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_type_work)
@@ -93,7 +94,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
     text_to_answer = texts.enter_narrative
     if type_work == 'Демонтаж-Монтаж':
         text_to_answer += '<b> демонтажа</b>'
-    await message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+    await safe_answer(message, text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
     await State.entering_narrative.set()
     await state.update_data(type_work=type_work)
 
@@ -104,11 +105,11 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     text_to_answer = texts.enter_narrative
     if type_work == 'Демонтаж-Монтаж':
         text_to_answer += '<b> демонтажа</b>'
-    await callback.message.answer(text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
+    await safe_answer(callback.message, text_to_answer, reply_markup=kb.get_narrative_recommendation_kb(recommendation_narrative))
     await State.entering_narrative.set()
     await state.update_data(type_work=type_work)
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await safe_callback_answer(callback)
+    await safe_edit_reply_markup(callback.message, reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_narrative)
@@ -116,12 +117,12 @@ async def send_welcome(message: types.Message, state: FSMContext):
     narrative = message.text
     data = await state.get_data()
     if data.get('is_combo'):
-        await message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
+        await safe_answer(message, texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
         await State.working_on.set()
         await state.update_data(start_date=str(datetime.now().strftime("%Y-%m-%d %H:%M:%S")))
     else:
         recommendation_type_transport = constants.type_transport
-        await message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
+        await safe_answer(message, texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
         await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
 
@@ -130,21 +131,21 @@ async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     narrative = callback.data
     data = await state.get_data()
     if data.get('is_combo'):
-        await callback.message.answer(texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
+        await safe_answer(callback.message, texts.narrative_accepted_go_to_montage, reply_markup=kb.completed_work_kb)
         await State.working_on.set()
     else:
         recommendation_type_transport = constants.type_transport
-        await callback.message.answer(texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
+        await safe_answer(callback.message, texts.enter_type_transport, reply_markup=kb.get_type_transport_recommendation_kb(recommendation_type_transport))
         await State.entering_type_transport.set()
     await state.update_data(narrative=narrative)
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await safe_callback_answer(callback)
+    await safe_edit_reply_markup(callback.message, reply_markup=None)
 
 
 @dp.message_handler(state=State.entering_type_transport)
 async def send_welcome(message: types.Message, state: FSMContext):
     type_transport = message.text
-    await message.answer(texts.enter_transport_number)
+    await safe_answer(message, texts.enter_transport_number, reply_markup=kb.back_kb)
     await State.entering_transport_number.set()
     await state.update_data(type_transport=type_transport)
 
@@ -152,10 +153,10 @@ async def send_welcome(message: types.Message, state: FSMContext):
 async def send_welcome(callback: types.CallbackQuery, state: FSMContext):
     type_transport = callback.data
     await state.update_data(type_transport=type_transport)
-    await callback.message.answer(texts.enter_transport_number)
+    await safe_answer(callback.message, texts.enter_transport_number, reply_markup=kb.back_kb)
     await State.entering_transport_number.set()
-    await callback.answer()
-    await callback.message.edit_reply_markup(reply_markup=None)
+    await safe_callback_answer(callback)
+    await safe_edit_reply_markup(callback.message, reply_markup=None)
 
 
 
@@ -164,16 +165,16 @@ async def send_welcome(message: types.Message, state: FSMContext):
     transport_number = message.text
     transport_number = side_logic.normalize_belarus_plate(transport_number)
     if transport_number is None:
-        await message.answer(texts.bad_plate)
-        await message.answer(texts.enter_transport_number)
+        await safe_answer(message, texts.bad_plate)
+        await safe_answer(message, texts.enter_transport_number, reply_markup=kb.back_kb)
         return
     data = await state.get_data()
     type_transport = data.get('type_transport')
     if type_transport in ['Маршрутка', 'Такси']:
-        await message.answer(texts.enter_representative, reply_markup=kb.no_info_kb)
+        await safe_answer(message, texts.enter_representative, reply_markup=kb.no_info_kb)
         await State.entering_representative.set()
     else:
-        await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
+        await safe_answer(message, texts.enter_photos_passport, reply_markup=kb.no_info_kb)
         await State.entering_photos_passport.set()
     await state.update_data(transport_number=transport_number)
 
@@ -184,10 +185,10 @@ async def send_welcome(message: types.Message, state: FSMContext):
     data = await state.get_data()
     type_transport = data.get('type_transport')
     if type_transport == 'Маршрутка':
-        await message.answer(texts.enter_route_number)
+        await safe_answer(message, texts.enter_route_number, reply_markup=kb.back_kb)
         await State.entering_route_number.set()
     else:
-        await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
+        await safe_answer(message, texts.enter_photos_passport, reply_markup=kb.no_info_kb)
         await State.entering_photos_passport.set()
     await state.update_data(representative=representative)
 
@@ -195,7 +196,7 @@ async def send_welcome(message: types.Message, state: FSMContext):
 @dp.message_handler(state=State.entering_route_number)
 async def send_welcome(message: types.Message, state: FSMContext):
     route_number = message.text
-    await message.answer(texts.enter_photos_passport, reply_markup=kb.no_info_kb)
+    await safe_answer(message, texts.enter_photos_passport, reply_markup=kb.no_info_kb)
     await State.entering_photos_passport.set()
     await state.update_data(route_number=route_number)
 
@@ -222,7 +223,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
             elif message.document:
                 doc = message.document
                 if not doc.mime_type or not doc.mime_type.startswith("image/"):
-                    await message.answer(texts.error_photo)
+                    await safe_answer(message, texts.error_photo, reply_markup=kb.back_kb)
                     return
                 file_id = message.document.file_id
                 photos_passport_doc.append(file_id)
@@ -238,26 +239,26 @@ async def handle_photo(message: types.Message, state: FSMContext):
             await state.update_data(photos_passport_pic=photos_passport_pic)
 
             if photos_count <= MIN_PASSPORT_PHOTOS:
-                await message.answer(f"Принято {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
+                await safe_answer(message, f"Принято {photos_count}/{MIN_PASSPORT_PHOTOS} фото.", reply_markup=kb.back_kb)
             if photos_count == MIN_PASSPORT_PHOTOS:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
-                    await message.answer(texts.enter_photos_before_demontage, reply_markup=ReplyKeyboardRemove())
+                    await safe_answer(message, texts.enter_photos_before_demontage, reply_markup=kb.back_kb)
                 else:
                     text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
-                    await message.answer(text)
+                    await safe_answer(message, text, reply_markup=kb.back_kb)
                 await State.entering_photos_before.set()
             if photos_count > MIN_PASSPORT_PHOTOS:
-                await message.answer(f"Принято дополнительное {photos_count}/{MIN_PASSPORT_PHOTOS} фото.")
+                await safe_answer(message, f"Принято дополнительное {photos_count}/{MIN_PASSPORT_PHOTOS} фото.", reply_markup=kb.back_kb)
         else:
             if message.text == buttons.no_info:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
-                    await message.answer(texts.enter_photos_before_demontage, reply_markup=ReplyKeyboardRemove())
+                    await safe_answer(message, texts.enter_photos_before_demontage, reply_markup=kb.back_kb)
                 else:
                     text = f"<i>{data.get('type_work')}\n\n</i>" + texts.enter_photos_before
-                    await message.answer(text)
+                    await safe_answer(message, text, reply_markup=kb.back_kb)
                 await State.entering_photos_before.set()
             else:
-                await message.answer(texts.error_photo)
+                await safe_answer(message, texts.error_photo, reply_markup=kb.back_kb)
 
 
 @dp.message_handler(content_types=['any'], state=State.entering_photos_before)
@@ -288,7 +289,7 @@ async def handle_photo(message: types.Message, state: FSMContext):
             elif message.document:
                 doc = message.document
                 if not doc.mime_type or not doc.mime_type.startswith("image/"):
-                    await message.answer(texts.error_photo)
+                    await safe_answer(message, texts.error_photo, reply_markup=kb.back_kb)
                     return
                 file_id = message.document.file_id
                 photos_before_doc.append(file_id)
@@ -304,18 +305,18 @@ async def handle_photo(message: types.Message, state: FSMContext):
             await state.update_data(photos_before_pic=photos_before_pic)
 
             if photos_count < LOCAL_MIN_BEFORE_PHOTOS:
-                await message.answer(f"Принято обязательное {photos_count}/{LOCAL_MIN_BEFORE_PHOTOS} фото.")
+                await safe_answer(message, f"Принято обязательное {photos_count}/{LOCAL_MIN_BEFORE_PHOTOS} фото.", reply_markup=kb.back_kb)
             if photos_count == LOCAL_MIN_BEFORE_PHOTOS:
                 if data.get('type_work') == 'Демонтаж-Монтаж':
-                    await message.answer(texts.go_to_demontage, reply_markup=kb.completed_work_kb)
+                    await safe_answer(message, texts.go_to_demontage, reply_markup=kb.completed_work_kb)
                 else:
-                    await message.answer(texts.go_to_work, reply_markup=kb.completed_work_kb)
+                    await safe_answer(message, texts.go_to_work, reply_markup=kb.completed_work_kb)
                 await State.working_on.set()
             if photos_count > LOCAL_MIN_BEFORE_PHOTOS:
-                await message.answer(f"Принято дополнительное {photos_count}/{LOCAL_MIN_BEFORE_PHOTOS} фото.")
+                await safe_answer(message, f"Принято дополнительное {photos_count}/{LOCAL_MIN_BEFORE_PHOTOS} фото.", reply_markup=kb.back_kb)
 
         else:
-            await message.answer(texts.error_photo)
+            await safe_answer(message, texts.error_photo, reply_markup=kb.back_kb)
     
 
     

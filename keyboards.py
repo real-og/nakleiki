@@ -11,6 +11,7 @@ def get_city_recommendation_kb(cities):
     for city in cities:
         button = InlineKeyboardButton(text=city, callback_data=city)
         kb.add(button)
+    kb.add(buttons.back)
     return kb
 
 def get_type_work_recommendation_kb(type_work_variants):
@@ -20,6 +21,7 @@ def get_type_work_recommendation_kb(type_work_variants):
     for type_work in type_work_variants:
         button = InlineKeyboardButton(text=type_work, callback_data=type_work)
         kb.add(button)
+    kb.add(buttons.back)
     return kb
 
 def get_narrative_recommendation_kb(narrative_variants):
@@ -27,16 +29,17 @@ def get_narrative_recommendation_kb(narrative_variants):
         return None
     if len(narrative_variants) >= 10:
         kb = InlineKeyboardMarkup(row_width=2)
-        buttons = [
+        buttons_to_add = [
             InlineKeyboardButton(text=narrative, callback_data=narrative)
             for narrative in narrative_variants
         ]
-        kb.add(*buttons)
+        kb.add(*buttons_to_add)
     else:
         kb = InlineKeyboardMarkup()
         for narrative in narrative_variants:
             button = InlineKeyboardButton(text=narrative, callback_data=narrative)
             kb.add(button)
+    kb.add(buttons.back)
     return kb
 
 def get_type_transport_recommendation_kb(type_transport_variants):
@@ -46,6 +49,7 @@ def get_type_transport_recommendation_kb(type_transport_variants):
     for type_transport in type_transport_variants:
         button = InlineKeyboardButton(text=type_transport, callback_data=type_transport)
         kb.add(button)
+    kb.add(buttons.back)
     return kb
 
 def get_users_to_select(users):
@@ -58,35 +62,36 @@ def get_users_to_select(users):
         user_compiled = name + ' ' + str(number)
         button = InlineKeyboardButton(text=user_compiled, callback_data=user_compiled)
         kb.add(button)
+    kb.add(buttons.back)
     return kb
 
 
-begin_kb = ReplyKeyboardMarkup([[buttons.begin]],
+begin_kb = ReplyKeyboardMarkup([[buttons.begin, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
 
-completed_work_kb = ReplyKeyboardMarkup([[buttons.completed, buttons.uncompleted]],
+completed_work_kb = ReplyKeyboardMarkup([[buttons.completed, buttons.uncompleted, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-skip_comment_kb = ReplyKeyboardMarkup([[buttons.skip_comment]],
+skip_comment_kb = ReplyKeyboardMarkup([[buttons.skip_comment, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-yes_no_kb = ReplyKeyboardMarkup([[buttons.yes, buttons.no]],
+yes_no_kb = ReplyKeyboardMarkup([[buttons.yes, buttons.no, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-finish_kb = ReplyKeyboardMarkup([[buttons.finish]],
+finish_kb = ReplyKeyboardMarkup([[buttons.finish, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-send_kb = ReplyKeyboardMarkup([[buttons.send, buttons.reset]],
+send_kb = ReplyKeyboardMarkup([[buttons.send, buttons.reset, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
-no_info_kb = ReplyKeyboardMarkup([[buttons.no_info]],
+no_info_kb = ReplyKeyboardMarkup([[buttons.no_info, buttons.back]],
                                     resize_keyboard=True,
                                     one_time_keyboard=True)
 
@@ -103,4 +108,9 @@ def get_percent_kb():
         InlineKeyboardButton(text="80", callback_data="80"),
         InlineKeyboardButton(text="90", callback_data="90"),
     )
+    kb.add(buttons.back)
     return kb
+
+back_kb = ReplyKeyboardMarkup([[buttons.back]],
+                                    resize_keyboard=True,
+                                    one_time_keyboard=True)
